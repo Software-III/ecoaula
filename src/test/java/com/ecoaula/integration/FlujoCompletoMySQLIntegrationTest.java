@@ -32,18 +32,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("dev")
-@org.junit.jupiter.api.condition.EnabledIf("isMySqlAvailable")
+@org.junit.jupiter.api.Tag("integracion-mysql")
 class FlujoCompletoMySQLIntegrationTest {
 
     private static final Logger log = LoggerFactory.getLogger(FlujoCompletoMySQLIntegrationTest.class);
-
-    static boolean isMySqlAvailable() {
-        try (java.net.Socket socket = new java.net.Socket("localhost", 3307)) {
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
-    }
 
     @Autowired
     private MockMvc mockMvc;

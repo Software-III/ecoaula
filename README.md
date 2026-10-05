@@ -81,15 +81,27 @@ La plataforma inicializa automáticamente datos de prueba con propósitos exclus
 
 - **Linux / macOS (Bash / Zsh):**
   ```bash
+  # Pruebas estándar y cobertura (100% autónomo sin Docker / MySQL):
   ./mvnw clean verify
+
+  # Pruebas de integración completa contra MySQL 8 (requiere docker compose up -d):
+  ./mvnw clean verify -Pintegracion-mysql
   ```
 - **Windows (PowerShell):**
   ```powershell
+  # Pruebas estándar y cobertura (100% autónomo sin Docker / MySQL):
   .\mvnw.cmd clean verify
+
+  # Pruebas de integración completa contra MySQL 8 (requiere docker compose up -d):
+  .\mvnw.cmd clean verify -Pintegracion-mysql
   ```
 - **Windows (CMD):**
   ```cmd
+  REM Pruebas estándar y cobertura (100% autónomo sin Docker / MySQL):
   mvnw.cmd clean verify
+
+  REM Pruebas de integración completa contra MySQL 8 (requiere docker compose up -d):
+  mvnw.cmd clean verify -Pintegracion-mysql
   ```
 
 El reporte interactivo de cobertura se genera en: `target/site/jacoco/index.html`.
