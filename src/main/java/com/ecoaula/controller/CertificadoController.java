@@ -49,7 +49,7 @@ public class CertificadoController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + nombreArchivo + "\"")
-                .contentType(MediaType.TEXT_PLAIN)
+                .contentType(MediaType.parseMediaType("text/plain;charset=UTF-8"))
                 .body(archivoTxt);
     }
 
