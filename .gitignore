@@ -33,6 +33,6 @@ logs/
 .DS_Store
 Thumbs.db
 
-# Almacenamiento local de archivos temporales
-storage/
-temp-audio/
+# Almacenamiento local de archivos temporales (solo en la raíz)
+/storage/
+/temp-audio/
