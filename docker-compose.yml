@@ -1,0 +1,24 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: ecoaula-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password_dev
+      MYSQL_DATABASE: ${DB_NAME:-ecoaula_db}
+      MYSQL_USER: ${DB_USER:-ecoaula_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-ecoaula_secret}
+    ports:
+      - "${DB_PORT:-3306}:3306"
+    volumes:
+      - ecoaula_mysql_data:/var/lib/mysql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot_password_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  ecoaula_mysql_data:
+    driver: local
