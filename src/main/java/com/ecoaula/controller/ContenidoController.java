@@ -107,7 +107,7 @@ public class ContenidoController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + nombreDescarga + "\"")
-                .contentType(MediaType.TEXT_PLAIN)
+                .contentType(MediaType.parseMediaType("text/plain;charset=UTF-8"))
                 .body(contenidoTxt);
     }
 }

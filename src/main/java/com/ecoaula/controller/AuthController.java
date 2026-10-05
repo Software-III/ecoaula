@@ -118,6 +118,7 @@ public class AuthController {
         PerfilAccesibilidad actualizado = accesibilidadService.actualizarPerfil(principal.getName(), datos);
         // Actualizar perfil en sesión para aplicar de inmediato sin reconsultar BD (ADR-02 / ADR-07)
         session.setAttribute(GlobalAccessibilityAdvice.SESSION_PERFIL_KEY, actualizado);
+        model.addAttribute("perfilAccesibilidad", actualizado);
 
         model.addAttribute("mensajeExito", "Preferencias de accesibilidad guardadas y aplicadas correctamente.");
         return "perfil";
