@@ -22,6 +22,9 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
+      - name: Dar permisos de ejecución al wrapper de Maven
+        run: chmod +x mvnw
+
       - name: Compilar y verificar con Maven (H2 / Unit tests)
         run: ./mvnw -B verify
 
@@ -48,7 +51,7 @@ jobs:
           MYSQL_PASSWORD: ecoaula_secret
         ports:
           - 3307:3306
-        options: --health-cmd="mysqladmin ping -h localhost -uroot -proot_secret" --health-interval=10s --health-timeout=5s --health-retries=5
+        options: --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot_secret" --health-interval=10s --health-timeout=5s --health-retries=10
 
     steps:
       - name: Checkout del código
@@ -60,6 +63,9 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
           cache: maven
+
+      - name: Dar permisos de ejecución al wrapper de Maven
+        run: chmod +x mvnw
 
       - name: Ejecutar pruebas de integración con MySQL (Perfil integracion-mysql)
         env:
