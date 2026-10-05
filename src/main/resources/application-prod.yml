@@ -1,0 +1,13 @@
+spring:
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:ecoaula_db}?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC&useSSL=true
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+
+ecoaula:
+  seguridad:
+    clave-cifrado: ${ECOAULA_CLAVE_CIFRADO}

@@ -1,70 +1,109 @@
 # EcoAula — Plataforma Web de Aprendizaje Accesible
 
-> Proyecto de Ingeniería de Software III — Universidad del Quindío  
-> Diseñado para personas con discapacidad visual (ciegas o con baja visión), garantizando autonomía total con lectores de pantalla (NVDA, JAWS, VoiceOver), navegación exclusiva por teclado y contraste alto.
+> **Proyecto de Ingeniería de Software III — Universidad del Quindío**  
+> Diseñado exclusivamente para personas con discapacidad visual (ciegas o con baja visión), garantizando autonomía total con lectores de pantalla (NVDA, JAWS, VoiceOver), navegación exclusiva por teclado y contraste alto.
 
 ---
 
 ## 🚀 Requisitos Previos
 
-- **Java 21** (JDK 21)
-- **Maven 3.9+** (o usar el script `./mvnw` incluido)
-- **Docker y Docker Compose** (opcional, para ejecutar MySQL local)
+- **Java 21 (JDK 21)** instalado y configurado en el `PATH` (o variable `JAVA_HOME`).
+- **Docker y Docker Compose** (recomendado para el perfil estándar con MySQL 8).
+- **Maven** (opcional, se incluye el wrapper `./mvnw` y `mvnw.cmd`).
 
 ---
 
-## ⚡ Puesta en Marcha Rápida (Entorno Local)
+## ⚡ Puesta en Marcha Rápida
 
-### Opción 1: Desarrollo con base de datos H2 en memoria (Sin dependencias externas)
+### Opción 1: Perfil de Desarrollo Estándar (MySQL con Docker Compose — ADR-04)
 
-Es la forma más rápida de ejecutar la aplicación sin necesidad de levantar contenedores Docker:
+Es el perfil predeterminado de la plataforma (`dev`), el cual persiste los datos en un contenedor MySQL 8 oficial.
 
+#### 1. Iniciar la base de datos MySQL:
 ```bash
-# 1. Clonar el repositorio y situarse en la raíz
-cd ecoaula
-
-# 2. Ejecutar la aplicación con perfil 'dev'
-./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
-# En Windows PowerShell si no tienes JAVA_HOME global:
-.\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=dev"
-```
-
-La aplicación iniciará en: **`http://localhost:8080`**
-
-### Opción 2: Desarrollo con base de datos MySQL vía Docker
-
-```bash
-# 1. Levantar el contenedor de MySQL
 docker compose up -d
-
-# 2. Ejecutar la aplicación con el perfil dev-mysql
-./mvnw spring-boot:run -Dspring-boot.run.profiles=dev-mysql
 ```
+
+#### 2. Ejecutar la aplicación:
+
+- **Linux / macOS (Bash / Zsh):**
+  ```bash
+  ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+  ```
+- **Windows (PowerShell):**
+  ```powershell
+  .\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=dev"
+  ```
+- **Windows (CMD):**
+  ```cmd
+  mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=dev
+  ```
+
+---
+
+### Opción 2: Perfil Autónomo Alterno (H2 en memoria en modo MySQL — `dev-h2`)
+
+Permite ejecutar y explorar la aplicación inmediatamente sin necesidad de tener Docker instalado ni servicios activos:
+
+- **Linux / macOS (Bash / Zsh):**
+  ```bash
+  ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev-h2
+  ```
+- **Windows (PowerShell):**
+  ```powershell
+  .\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=dev-h2"
+  ```
+- **Windows (CMD):**
+  ```cmd
+  mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=dev-h2
+  ```
+
+La aplicación quedará disponible en: **`http://localhost:8080`**
 
 ---
 
 ## 👤 Usuario de Demostración (Seed Data)
 
-Para ingresar inmediatamente a la plataforma sin necesidad de registrarse previamente:
+La plataforma inicializa automáticamente datos de prueba con propósitos exclusivamente demostrativos:
 
 | Campo | Valor |
 |---|---|
 | **Correo electrónico** | `aprendiz@ecoaula.local` |
 | **Contraseña** | `EcoAula2026!` |
 | **Rol** | `APRENDIZ` |
-| **Perfil configurado** | Velocidad audio 1.0x, Modo estándar, Tamaño texto normal |
+| **Preferencias iniciales** | Velocidad de audio 1.0x, Modo estándar, Tamaño texto normal |
 
 ---
 
-## 🛠️ Comandos Principales
+## 🛠️ Comandos de Validación y Pruebas
 
-```bash
-# Ejecutar compilación y pruebas con reporte JaCoCo
-./mvnw clean verify
+### Ejecutar todas las pruebas y generar reporte de cobertura JaCoCo:
 
-# Ver reporte de cobertura generado por JaCoCo
-# Se genera en: target/site/jacoco/index.html
-```
+- **Linux / macOS (Bash / Zsh):**
+  ```bash
+  ./mvnw clean verify
+  ```
+- **Windows (PowerShell):**
+  ```powershell
+  .\mvnw.cmd clean verify
+  ```
+- **Windows (CMD):**
+  ```cmd
+  mvnw.cmd clean verify
+  ```
+
+El reporte interactivo de cobertura se genera en: `target/site/jacoco/index.html`.
+
+---
+
+## 🌐 Verificación Pública de Certificados
+
+- **Página pública web:** `http://localhost:8080/verificar`
+- **API REST pública (ADR-06, sin sesión, rate limiting):**
+  ```bash
+  curl http://localhost:8080/api/v1/certificados/EA-XXXX-XXXX-XXXX-XXXX/verificacion
+  ```
+  Retorna estrictamente: `{"valido": true}` o `{"valido": false}`.
 
 ---
 

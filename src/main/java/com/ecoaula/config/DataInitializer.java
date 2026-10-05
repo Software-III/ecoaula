@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
  * Presenta todos los cursos y contenidos explícitamente como datos de demostración.
  */
 @Component
-@Profile({"dev", "dev-h2", "default"})
+@Profile({"dev", "dev-h2"})
 public class DataInitializer implements CommandLineRunner {
 
     private static final Logger log = LoggerFactory.getLogger(DataInitializer.class);

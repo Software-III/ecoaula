@@ -70,6 +70,10 @@ body {
     padding: 0;
     background-color: var(--color-fondo);
     color: var(--color-texto);
+    width: 100%;
+    min-width: 0;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
 }
 
 /* Foco de teclado ultra visible en todos los elementos interactivos */
@@ -311,6 +315,7 @@ legend {
    -------------------------------------------------------------------------- */
 .boton-principal {
     display: inline-block;
+    max-width: 100%;
     min-height: 48px;
     padding: 0.75rem 1.5rem;
     font-size: 1.05rem;
@@ -322,6 +327,8 @@ legend {
     cursor: pointer;
     text-decoration: none;
     text-align: center;
+    white-space: normal;
+    word-break: break-word;
 }
 
 .boton-principal:hover {
@@ -330,6 +337,7 @@ legend {
 
 .boton-secundario {
     display: inline-block;
+    max-width: 100%;
     min-height: 48px;
     padding: 0.75rem 1.5rem;
     font-size: 1.05rem;
@@ -341,6 +349,8 @@ legend {
     cursor: pointer;
     text-decoration: underline;
     text-align: center;
+    white-space: normal;
+    word-break: break-word;
 }
 
 body.modo-alto-contraste .boton-principal {
@@ -375,6 +385,8 @@ body.modo-alto-contraste .boton-secundario {
     padding: 1.25rem;
     margin-bottom: 1.5rem;
     background-color: var(--color-fondo-panel);
+    max-width: 100%;
+    word-break: break-word;
 }
 
 .metadato-curso {
@@ -392,6 +404,7 @@ body.modo-alto-contraste .boton-secundario {
 
 audio {
     width: 100%;
+    max-width: 100%;
     min-height: 54px;
     margin-bottom: 1rem;
 }
@@ -403,12 +416,15 @@ audio {
     padding: 1.25rem;
     margin-top: 1rem;
     line-height: 1.8;
+    max-width: 100%;
 }
 
 .transcripcion-texto {
     white-space: pre-wrap;
     font-family: inherit;
     margin-bottom: 1rem;
+    word-break: break-word;
+    overflow-wrap: break-word;
 }
 
 /* --------------------------------------------------------------------------
@@ -417,19 +433,25 @@ audio {
 .certificado-caja {
     border: 4px double var(--color-borde);
     border-radius: 8px;
-    padding: 2rem;
+    padding: 2rem 1.25rem;
     margin: 2rem 0;
     background-color: var(--color-fondo-panel);
     text-align: center;
+    max-width: 100%;
+    word-break: break-word;
 }
 
 .codigo-verificacion {
     display: inline-block;
+    max-width: 100%;
     font-family: monospace;
-    font-size: 1.35rem;
-    letter-spacing: 2px;
-    padding: 0.5rem 1rem;
+    font-size: clamp(1rem, 4vw, 1.35rem);
+    letter-spacing: 1px;
+    padding: 0.5rem 0.75rem;
     border: 2px dashed var(--color-borde);
     margin: 1rem 0;
     font-weight: bold;
+    word-break: break-all;
+    overflow-wrap: anywhere;
+    box-sizing: border-box;
 }

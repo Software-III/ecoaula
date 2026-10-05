@@ -43,7 +43,26 @@ class CifradorAESGCMTest {
     void debeDetectarManipulacionEnTagGCM() {
         String cifrado = cifrador.cifrar("Dato seguro");
         String manipulado = cifrado.substring(0, cifrado.length() - 4) + "AAAA";
-
         assertThrows(IllegalStateException.class, () -> cifrador.descifrar(manipulado));
+    }
+
+    @Test
+    @DisplayName("Debe fallar al arrancar en perfil prod si falta la variable ECOAULA_CLAVE_CIFRADO")
+    void debeFallarEnPerfilProdSiFaltaClaveCifrado() {
+        org.springframework.mock.env.MockEnvironment env = new org.springframework.mock.env.MockEnvironment();
+        env.setActiveProfiles("prod");
+
+        assertThrows(IllegalStateException.class, () -> new CifradorAESGCM(null, env));
+        assertThrows(IllegalStateException.class, () -> new CifradorAESGCM("", env));
+        assertThrows(IllegalStateException.class, () -> new CifradorAESGCM("ecoaula-clave-secreta-aes-256-ok!", env));
+    }
+
+    @Test
+    @DisplayName("Debe arrancar satisfactoriamente en perfil prod si se suministra una clave de cifrado válida")
+    void debeArrancarEnPerfilProdConClaveValida() {
+        org.springframework.mock.env.MockEnvironment env = new org.springframework.mock.env.MockEnvironment();
+        env.setActiveProfiles("prod");
+
+        assertDoesNotThrow(() -> new CifradorAESGCM("mi-clave-super-secreta-de-produccion-12345", env));
     }
 }
