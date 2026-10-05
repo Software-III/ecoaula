@@ -28,10 +28,11 @@ Este documento establece la metodología de pruebas de accesibilidad aplicable a
 ### Procedimiento:
 1. En el navegador web (Chrome/Firefox/Edge), aplicar un nivel de aumento de **200%** mediante `Ctrl + +`.
 2. Verificar que:
-   - Todo el contenido y controles se reorganicen en una sola columna vertical.
-   - **No exista barra de desplazamiento horizontal** para leer el texto principal ni para acceder a los botones.
-   - Los campos de formulario, botones y opciones de radio conserven un tamaño mínimo táctil de 48px de altura.
-   - Las transcripciones y certificados sigan siendo legibles sin recortes ni superposiciones de texto.
+   - Todo el contenido y controles se reorganicen fluidamente en una sola columna vertical (`width: 100%`, `max-width: var(--ancho-maximo)`).
+   - **No exista barra de desplazamiento horizontal** para leer el texto principal ni para interactuar con botones o campos (`overflow-wrap: break-word`, `word-break: break-word`, `white-space: normal`).
+   - El diseño **no oculta ni corta contenido**: se descarta el uso de `overflow-x: hidden` en favor de un reflow auténtico con envoltura de palabras, evitando pérdida de información conforme a WCAG 1.4.10.
+   - Los campos de formulario, botones y opciones conserven un área mínima accesible de 48px de altura.
+   - Las transcripciones extensas y los códigos de verificación se ajusten fluidamente con saltos de línea automáticos.
 
 ---
 

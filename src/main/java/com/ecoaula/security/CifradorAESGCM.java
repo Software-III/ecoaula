@@ -28,8 +28,20 @@ public class CifradorAESGCM {
     private final SecretKey secretKey;
     private final SecureRandom secureRandom = new SecureRandom();
 
-    public CifradorAESGCM(@Value("${ecoaula.seguridad.clave-cifrado:ecoaula-clave-secreta-aes-256-ok!}") String claveRaw) {
-        this.secretKey = derivarClave256(claveRaw);
+    public CifradorAESGCM(String claveRaw) {
+        this(claveRaw, null);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public CifradorAESGCM(@Value("${ecoaula.seguridad.clave-cifrado:}") String claveRaw,
+                          org.springframework.core.env.Environment env) {
+        if (env != null && java.util.Arrays.asList(env.getActiveProfiles()).contains("prod")) {
+            if (claveRaw == null || claveRaw.isBlank() || "ecoaula-clave-secreta-aes-256-ok!".equals(claveRaw)) {
+                throw new IllegalStateException("CRÍTICO: En perfil 'prod' es estrictamente obligatorio suministrar la variable de entorno ECOAULA_CLAVE_CIFRADO.");
+            }
+        }
+        String claveEfectiva = (claveRaw == null || claveRaw.isBlank()) ? "ecoaula-clave-secreta-aes-256-ok!" : claveRaw;
+        this.secretKey = derivarClave256(claveEfectiva);
     }
 
     /**
