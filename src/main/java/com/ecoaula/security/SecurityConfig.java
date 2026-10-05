@@ -37,6 +37,7 @@ public class SecurityConfig {
                     "/registro",
                     "/login",
                     "/api/v1/certificados/**",
+                    "/verificar",
                     "/css/**",
                     "/audio/**",
                     "/error",

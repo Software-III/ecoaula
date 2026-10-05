@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'Pregunta ' + ${indice} + ' de ' + ${totalPreguntas} + ' — Evaluación ' + ${matricula.curso.titulo} + ' — EcoAula'">Evaluación — EcoAula</title>
+    <link rel="stylesheet" th:href="@{/css/ecoaula.css}">
+</head>
+<body th:class="${(perfilAccesibilidad != null and perfilAccesibilidad.modoVisual != null and perfilAccesibilidad.modoVisual.name() == 'ALTO_CONTRASTE' ? 'modo-alto-contraste ' : '') + (perfilAccesibilidad != null and perfilAccesibilidad.tamanoTexto != null and perfilAccesibilidad.tamanoTexto.name() == 'GRANDE' ? 'texto-grande ' : '') + (perfilAccesibilidad != null and perfilAccesibilidad.soloAudio ? 'solo-audio ' : '')}">
+
+    <a href="#contenido-principal" class="skip-link">Saltar al contenido principal</a>
+
+    <header class="encabezado-sitio" role="banner">
+        <div class="contenedor-principal">
+            <div style="font-size: 1.5rem; font-weight: bold;">
+                <a th:href="@{/cursos}" style="text-decoration: none; color: inherit;">EcoAula</a>
+            </div>
+            <nav class="navegacion-principal" role="navigation" aria-label="Navegación del curso">
+                <ul>
+                    <li><a th:href="@{/cursos}">Catálogo de Cursos</a></li>
+                    <li><a th:href="@{/perfil}">Mi Perfil</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main id="contenido-principal" class="contenedor-principal" role="main" tabindex="-1">
+
+        <p style="margin-bottom: 0.5rem; color: var(--color-texto-secundario);">
+            Curso: <strong th:text="${matricula.curso.titulo}">Nombre del Curso</strong>
+        </p>
+
+        <!-- Indicador textual obligatorio: una pregunta a la vez (§7) -->
+        <p style="font-size: 1.15rem; font-weight: bold; margin-bottom: 1rem;" aria-live="polite">
+            Progreso de evaluación: Pregunta <span th:text="${indice}">1</span> de <span th:text="${totalPreguntas}">5</span>
+        </p>
+
+        <h1 style="font-size: 1.5rem;">Cuestionario de Certificación</h1>
+
+        <form th:action="@{/matriculas/{id}/evaluacion(id=${matricula.id})}" method="post">
+            <input type="hidden" name="intentoId" th:value="${intento.id}">
+            <input type="hidden" name="preguntaId" th:value="${pregunta.id}">
+            <input type="hidden" name="indice" th:value="${indice}">
+            <input type="hidden" name="esUltima" th:value="${esUltima}">
+
+            <fieldset style="margin-top: 1.5rem;">
+                <legend th:text="${pregunta.enunciado}">Enunciado de la pregunta</legend>
+
+                <p id="ayuda-seleccion" class="ayuda-campo">Seleccione una única respuesta utilizando las flechas de su teclado o la barra espaciadora:</p>
+
+                <div th:each="opcion : ${pregunta.opciones}" class="opcion-seleccion" style="margin: 0.5rem 0;">
+                    <input type="radio" th:id="'opc-' + ${opcion.id}" name="opcionId"
+                           th:value="${opcion.id}"
+                           th:checked="${opcion.id == opcionSeleccionadaId}"
+                           required aria-describedby="ayuda-seleccion">
+                    <label th:for="'opc-' + ${opcion.id}" th:text="${opcion.texto}">Texto de la opción</label>
+                </div>
+            </fieldset>
+
+            <div style="margin-top: 2rem;">
+                <button type="submit" class="boton-principal" style="width: 100%; max-width: 480px;">
+                    <span th:if="${esUltima}">Finalizar y calificar evaluación</span>
+                    <span th:unless="${esUltima}">Guardar y siguiente pregunta</span>
+                </button>
+            </div>
+        </form>
+
+        <div style="margin-top: 2rem;">
+            <a th:href="@{/cursos/{id}/lecciones/1(id=${matricula.curso.id})}" class="boton-secundario">
+                Repasar lecciones del curso
+            </a>
+        </div>
+
+    </main>
+
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultado de la Evaluación — EcoAula</title>
+    <link rel="stylesheet" th:href="@{/css/ecoaula.css}">
+</head>
+<body th:class="${(perfilAccesibilidad != null and perfilAccesibilidad.modoVisual != null and perfilAccesibilidad.modoVisual.name() == 'ALTO_CONTRASTE' ? 'modo-alto-contraste ' : '') + (perfilAccesibilidad != null and perfilAccesibilidad.tamanoTexto != null and perfilAccesibilidad.tamanoTexto.name() == 'GRANDE' ? 'texto-grande ' : '') + (perfilAccesibilidad != null and perfilAccesibilidad.soloAudio ? 'solo-audio ' : '')}">
+
+    <a href="#contenido-principal" class="skip-link">Saltar al contenido principal</a>
+
+    <header class="encabezado-sitio" role="banner">
+        <div class="contenedor-principal">
+            <div style="font-size: 1.5rem; font-weight: bold;">
+                <a th:href="@{/cursos}" style="text-decoration: none; color: inherit;">EcoAula</a>
+            </div>
+            <nav class="navegacion-principal" role="navigation" aria-label="Navegación del curso">
+                <ul>
+                    <li><a th:href="@{/cursos}">Catálogo de Cursos</a></li>
+                    <li><a th:href="@{/perfil}">Mi Perfil</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main id="contenido-principal" class="contenedor-principal" role="main" tabindex="-1">
+
+        <h1>Resultado de la Evaluación</h1>
+
+        <p style="margin-bottom: 1rem;">
+            Curso evaluado: <strong th:text="${matricula.curso.titulo}">Curso</strong>
+        </p>
+
+        <!-- Bloque de aprobación / reprobación con aria-live -->
+        <div th:if="${intento.aprobado}" class="alerta alerta-exito" role="status" aria-live="polite">
+            <h2>¡Felicitaciones! Ha aprobado la evaluación</h2>
+            <p>
+                Obtuvo un puntaje de <strong th:text="${intento.puntaje} + '%'">80%</strong>. 
+                El puntaje mínimo requerido para certificar es de <span th:text="${umbral} + '%'">70%</span>.
+            </p>
+            <div style="margin-top: 1.5rem;" th:if="${matricula.certificado != null}">
+                <a th:href="@{/certificados/{id}(id=${matricula.certificado.id})}" class="boton-principal">
+                    Ver y descargar mi Certificado de Aprobación
+                </a>
+            </div>
+        </div>
+
+        <div th:unless="${intento.aprobado}" class="alerta alerta-error" role="alert" aria-live="polite">
+            <h2>Evaluación no aprobada</h2>
+            <p>
+                Obtuvo un puntaje de <strong th:text="${intento.puntaje} + '%'">50%</strong>. 
+                El umbral mínimo de aprobación es de <span th:text="${umbral} + '%'">70%</span>.
+            </p>
+            <p>Puede repasar los contenidos del curso y presentar un nuevo intento cuando lo desee.</p>
+
+            <form th:action="@{/matriculas/{id}/evaluacion/reintentar(id=${matricula.id})}" method="post" style="margin-top: 1.5rem;">
+                <button type="submit" class="boton-principal">Iniciar nuevo intento de evaluación</button>
+            </form>
+        </div>
+
+        <div style="margin-top: 2rem;">
+            <a th:href="@{/cursos/{id}/lecciones/1(id=${matricula.curso.id})}" class="boton-secundario">
+                Repasar lecciones del curso
+            </a>
+        </div>
+
+    </main>
+
+</body>
+</html>

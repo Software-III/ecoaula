@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificación de Certificados — EcoAula</title>
+    <link rel="stylesheet" th:href="@{/css/ecoaula.css}">
+</head>
+<body th:class="${(perfilAccesibilidad != null and perfilAccesibilidad.modoVisual != null and perfilAccesibilidad.modoVisual.name() == 'ALTO_CONTRASTE' ? 'modo-alto-contraste ' : '') + (perfilAccesibilidad != null and perfilAccesibilidad.tamanoTexto != null and perfilAccesibilidad.tamanoTexto.name() == 'GRANDE' ? 'texto-grande ' : '')}">
+
+    <a href="#contenido-principal" class="skip-link">Saltar al contenido principal</a>
+
+    <header class="encabezado-sitio" role="banner">
+        <div class="contenedor-principal">
+            <div style="font-size: 1.5rem; font-weight: bold;">
+                <a th:href="@{/cursos}" style="text-decoration: none; color: inherit;">EcoAula</a>
+            </div>
+            <nav class="navegacion-principal" role="navigation" aria-label="Navegación principal">
+                <ul>
+                    <li><a th:href="@{/cursos}">Catálogo de Cursos</a></li>
+                    <li><a th:href="@{/verificar}" aria-current="page">Verificar Certificado</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main id="contenido-principal" class="contenedor-principal" role="main" tabindex="-1">
+
+        <h1>Verificación Pública de Autenticidad</h1>
+
+        <p>
+            Ingrese el código de verificación del certificado (formato: <code>EA-XXXX-XXXX-XXXX-XXXX</code>) para comprobar si fue emitido válidamente por la plataforma EcoAula.
+        </p>
+
+        <!-- Formulario accesible de búsqueda de código -->
+        <form th:action="@{/verificar}" method="get" style="margin: 2rem 0;">
+            <div class="grupo-campo">
+                <label for="codigo">Código de verificación del certificado</label>
+                <input type="text" id="codigo" name="codigo" th:value="${codigoConsultado}"
+                       placeholder="Ejemplo: EA-7K3M-Q9XW-2D4F-8HNP"
+                       required style="max-width: 480px; font-family: monospace; font-size: 1.15rem; letter-spacing: 1px;">
+            </div>
+
+            <div style="margin-top: 1.5rem;">
+                <button type="submit" class="boton-principal">Validar autenticidad</button>
+            </div>
+        </form>
+
+        <!-- Resultado de validación con retroalimentación clara -->
+        <div th:if="${resultadoValidacion != null}">
+            <div th:if="${resultadoValidacion}" class="alerta alerta-exito" role="status" aria-live="polite">
+                <h2>✅ Certificado Auténtico y Válido</h2>
+                <p>
+                    El código <strong th:text="${codigoConsultado}">EA-XXXX</strong> corresponde a un certificado legalmente emitido y registrado en la base de datos de EcoAula.
+                </p>
+                <p style="font-size: 0.95rem; margin-top: 0.5rem;">
+                    <em>Por protección de datos sensibles y normatividad de privacidad (ADR-06), el sistema no divulga públicamente la identidad del aprendiz.</em>
+                </p>
+            </div>
+
+            <div th:unless="${resultadoValidacion}" class="alerta alerta-error" role="alert" aria-live="polite">
+                <h2>❌ Certificado No Válido o Inexistente</h2>
+                <p>
+                    No se encontró ningún registro activo para el código <strong th:text="${codigoConsultado}">EA-XXXX</strong>.
+                </p>
+                <p style="font-size: 0.95rem; margin-top: 0.5rem;">
+                    Verifique que haya copiado todos los caracteres y guiones exactamente como figuran en el documento original.
+                </p>
+            </div>
+        </div>
+
+        <div style="margin-top: 3rem; border-top: 2px solid var(--color-borde); padding-top: 1.5rem;">
+            <h2>API REST para integración externa</h2>
+            <p>Los sistemas externos pueden verificar certificados sin sesión mediante la ruta pública:</p>
+            <code>GET /api/v1/certificados/{codigo}/verificacion</code>
+            <p style="margin-top: 0.5rem; font-size: 0.95rem; color: var(--color-texto-secundario);">
+                Respuesta: <code>{"valido": true}</code> o <code>{"valido": false}</code>.
+            </p>
+        </div>
+
+    </main>
+
+</body>
+</html>
