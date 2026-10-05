@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${(codigoError != null ? 'Error ' + codigoError + ': ' : 'Error: ') + (tituloError != null ? tituloError : 'Error inesperado') + ' — EcoAula'}">Error — EcoAula</title>
+    <link rel="stylesheet" th:href="@{/css/ecoaula.css}">
+</head>
+<body th:class="${(perfilAccesibilidad != null and perfilAccesibilidad.modoVisual != null and perfilAccesibilidad.modoVisual.name() == 'ALTO_CONTRASTE' ? 'modo-alto-contraste ' : '') + (perfilAccesibilidad != null and perfilAccesibilidad.tamanoTexto != null and perfilAccesibilidad.tamanoTexto.name() == 'GRANDE' ? 'texto-grande ' : '')}">
+
+    <a href="#contenido-principal" class="skip-link">Saltar al contenido principal</a>
+
+    <header class="encabezado-sitio" role="banner">
+        <div class="contenedor-principal">
+            <div style="font-size: 1.5rem; font-weight: bold;">
+                <a th:href="@{/cursos}" style="text-decoration: none; color: inherit;">EcoAula</a>
+            </div>
+        </div>
+    </header>
+
+    <main id="contenido-principal" class="contenedor-principal" role="main" tabindex="-1">
+        <h1 th:text="${tituloError != null ? tituloError : 'Se ha producido un error'}">Se ha producido un error</h1>
+
+        <div class="alerta alerta-error" role="alert">
+            <p th:text="${mensajeError != null ? mensajeError : 'No pudimos procesar su solicitud. Por favor intente más tarde.'}">
+                No pudimos procesar su solicitud. Por favor intente más tarde.
+            </p>
+            <p th:if="${codigoError != null}" style="font-size: 0.95rem; margin-top: 0.5rem;">
+                Código de referencia: <strong th:text="${codigoError}">500</strong>
+            </p>
+        </div>
+
+        <div style="margin-top: 2rem;">
+            <a th:href="@{/cursos}" class="boton-principal">Volver al catálogo de cursos</a>
+        </div>
+    </main>
+
+</body>
+</html>

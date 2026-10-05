@@ -1,0 +1,17 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:ecoaula_test;DB_CLOSE_DELAY=-1;MODE=MySQL;DATABASE_TO_LOWER=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+
+ecoaula:
+  seguridad:
+    clave-cifrado: test-clave-secreta-aes-256-ok1234
+    rate-limit-permits: 30
+    rate-limit-duration-minutes: 1
