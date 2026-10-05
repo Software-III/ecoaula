@@ -54,6 +54,29 @@ class FlujoCompletoMySQLIntegrationTest {
     @Autowired
     private CertificadoRepository certificadoRepository;
 
+    @Autowired
+    private com.ecoaula.repository.IntentoEvaluacionRepository intentoRepository;
+
+    @Autowired
+    private com.ecoaula.repository.RespuestaIntentoRepository respuestaRepository;
+
+    @Autowired
+    private com.ecoaula.repository.AvanceLeccionRepository avanceRepository;
+
+    @org.junit.jupiter.api.BeforeEach
+    void limpiarMatriculaPrevia() {
+        matriculaRepository.findByAprendizCorreoAndCursoId("aprendiz@ecoaula.local", 1L)
+                .ifPresent(m -> {
+                    certificadoRepository.findByMatriculaId(m.getId()).ifPresent(certificadoRepository::delete);
+                    intentoRepository.findByMatriculaIdOrderByFechaInicioDesc(m.getId()).forEach(it -> {
+                        respuestaRepository.deleteAll(respuestaRepository.findByIntentoId(it.getId()));
+                        intentoRepository.delete(it);
+                    });
+                    avanceRepository.deleteAll(avanceRepository.findByAprendizId(m.getAprendiz().getId()));
+                    matriculaRepository.delete(m);
+                });
+    }
+
     @Test
     @DisplayName("Recorrido completo del aprendiz contra MySQL oficial en Docker")
     @WithUserDetails("aprendiz@ecoaula.local")
@@ -143,16 +166,26 @@ class FlujoCompletoMySQLIntegrationTest {
 
         // 6. Presentar Evaluación (Pantalla 5) - 5 preguntas
         log.info("Paso 6: Presentando cuestionario accesible de evaluación (1 pregunta a la vez)...");
+        mockMvc.perform(get("/matriculas/" + matriculaId + "/evaluacion?p=1").session(session))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Progreso de evaluación: Pregunta")));
+
+        com.ecoaula.model.IntentoEvaluacion intento = intentoRepository.findByMatriculaIdAndEstado(matriculaId, com.ecoaula.model.enums.EstadoIntento.EN_CURSO)
+                .orElseThrow();
+        Long intentoId = intento.getId();
+
         for (int p = 1; p <= 4; p++) {
-            mockMvc.perform(get("/matriculas/" + matriculaId + "/evaluacion?p=" + p).session(session))
-                    .andExpect(status().isOk())
-                    .andExpect(content().string(containsString("Progreso de evaluación: Pregunta")));
+            if (p > 1) {
+                mockMvc.perform(get("/matriculas/" + matriculaId + "/evaluacion?p=" + p).session(session))
+                        .andExpect(status().isOk())
+                        .andExpect(content().string(containsString("Progreso de evaluación: Pregunta")));
+            }
 
             long opcionId = ((p - 1) * 4) + 1;
             mockMvc.perform(post("/matriculas/" + matriculaId + "/evaluacion")
                             .session(session)
                             .with(csrf())
-                            .param("intentoId", "1")
+                            .param("intentoId", String.valueOf(intentoId))
                             .param("preguntaId", String.valueOf(p))
                             .param("opcionId", String.valueOf(opcionId))
                             .param("indice", String.valueOf(p))
@@ -166,7 +199,7 @@ class FlujoCompletoMySQLIntegrationTest {
         mockMvc.perform(post("/matriculas/" + matriculaId + "/evaluacion")
                         .session(session)
                         .with(csrf())
-                        .param("intentoId", "1")
+                        .param("intentoId", String.valueOf(intentoId))
                         .param("preguntaId", "5")
                         .param("opcionId", String.valueOf(opcionPregunta5))
                         .param("indice", "5")
