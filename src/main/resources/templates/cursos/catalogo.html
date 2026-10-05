@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo de Cursos Accesibles — EcoAula</title>
+    <link rel="stylesheet" th:href="@{/css/ecoaula.css}">
+</head>
+<body th:class="${(perfilAccesibilidad != null and perfilAccesibilidad.modoVisual != null and perfilAccesibilidad.modoVisual.name() == 'ALTO_CONTRASTE' ? 'modo-alto-contraste ' : '') + (perfilAccesibilidad != null and perfilAccesibilidad.tamanoTexto != null and perfilAccesibilidad.tamanoTexto.name() == 'GRANDE' ? 'texto-grande ' : '') + (perfilAccesibilidad != null and perfilAccesibilidad.soloAudio ? 'solo-audio ' : '')}">
+
+    <a href="#contenido-principal" class="skip-link">Saltar al contenido principal</a>
+
+    <header class="encabezado-sitio" role="banner">
+        <div class="contenedor-principal">
+            <div style="font-size: 1.5rem; font-weight: bold;">
+                <a th:href="@{/cursos}" style="text-decoration: none; color: inherit;">EcoAula</a>
+            </div>
+            <nav class="navegacion-principal" role="navigation" aria-label="Navegación principal">
+                <ul>
+                    <li><a th:href="@{/cursos}" aria-current="page">Catálogo de Cursos</a></li>
+                    <li sec:authorize="isAuthenticated()"><a th:href="@{/perfil}">Mi Perfil</a></li>
+                    <li sec:authorize="isAnonymous()"><a th:href="@{/registro}">Registrarme</a></li>
+                    <li sec:authorize="isAnonymous()"><a th:href="@{/login}">Iniciar Sesión</a></li>
+                    <li sec:authorize="isAuthenticated()">
+                        <form th:action="@{/logout}" method="post" style="display: inline;">
+                            <button type="submit" class="boton-secundario" style="min-height: 38px; padding: 0.25rem 0.75rem; font-size: 1rem;">Cerrar Sesión</button>
+                        </form>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main id="contenido-principal" class="contenedor-principal" role="main" tabindex="-1">
+        <h1>Catálogo de Cursos Accesibles</h1>
+
+        <p>Explore los cursos cortos disponibles. Todos los contenidos han sido adaptados con audio nativo, transcripciones completas y evaluaciones diseñadas para autonomía con lectores de pantalla.</p>
+
+        <!-- Formulario de búsqueda accesible -->
+        <section aria-labelledby="seccion-buscar" style="margin-top: 1.5rem; margin-bottom: 2rem;">
+            <h2 id="seccion-buscar" style="font-size: 1.2rem;">Buscar cursos</h2>
+            <form th:action="@{/cursos}" method="get" role="search">
+                <div class="grupo-campo">
+                    <label for="campo-buscar">Título, tema o área de conocimiento</label>
+                    <input type="text" id="campo-buscar" name="q" th:value="${termino}" placeholder="Ejemplo: Ofimática, Servicio, Finanzas">
+                </div>
+                <div style="display: flex; gap: 1rem; align-items: center;">
+                    <button type="submit" class="boton-principal" style="min-height: 44px; padding: 0.5rem 1.25rem;">Buscar</button>
+                    <a th:if="${termino != null and !termino.isBlank()}" th:href="@{/cursos}" class="boton-secundario" style="min-height: 44px; padding: 0.5rem 1.25rem;">Ver todos los cursos</a>
+                </div>
+            </form>
+        </section>
+
+        <!-- Listado vertical de cursos en una sola columna -->
+        <section aria-labelledby="seccion-resultados">
+            <h2 id="seccion-resultados" style="font-size: 1.3rem;">
+                <span th:if="${termino != null and !termino.isBlank()}" th:text="'Resultados para: &quot;' + ${termino} + '&quot; (' + ${cursos.size()} + ')'">Resultados</span>
+                <span th:unless="${termino != null and !termino.isBlank()}" th:text="'Cursos disponibles (' + ${cursos.size()} + ')'">Cursos disponibles</span>
+            </h2>
+
+            <div th:if="${cursos.empty}" class="alerta alerta-error" role="status">
+                No se encontraron cursos que coincidan con su búsqueda. Intente con otro término o consulte el catálogo completo.
+            </div>
+
+            <ul class="lista-cursos">
+                <li th:each="curso : ${cursos}" class="tarjeta-curso">
+                    <h3 th:text="${curso.titulo}" style="font-size: 1.35rem; margin-top: 0;">Título del curso</h3>
+                    
+                    <p class="metadato-curso">
+                        <span th:text="${curso.horas} + ' horas'">10 horas</span> · 
+                        <span th:text="${curso.area}">Tecnología</span> · 
+                        <span th:text="${curso.modalidad}">Virtual accesible</span>
+                    </p>
+
+                    <p th:text="${curso.descripcion}" style="margin-bottom: 1.5rem;">Descripción del curso...</p>
+
+                    <!-- Acciones según estado de autenticación y matrícula -->
+                    <div sec:authorize="isAuthenticated()">
+                        <!-- Si ya está matriculado -->
+                        <div th:if="${matriculasPorCurso.containsKey(curso.id)}">
+                            <a th:href="@{/matriculas/{id}/confirmacion(id=${matriculasPorCurso.get(curso.id)})}" class="boton-principal">
+                                Continuar curso
+                            </a>
+                        </div>
+                        <!-- Si no está matriculado -->
+                        <form th:unless="${matriculasPorCurso.containsKey(curso.id)}" th:action="@{/cursos/{id}/matricular(id=${curso.id})}" method="post">
+                            <button type="submit" class="boton-principal">
+                                Matricularme en este curso
+                            </button>
+                        </form>
+                    </div>
+
+                    <div sec:authorize="isAnonymous()">
+                        <a th:href="@{/login}" class="boton-principal">
+                            Iniciar sesión para matricularme
+                        </a>
+                    </div>
+                </li>
+            </ul>
+        </section>
+    </main>
+
+</body>
+</html>
