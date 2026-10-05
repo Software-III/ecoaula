@@ -1,0 +1,33 @@
+server:
+  port: ${SERVER_PORT:8080}
+  error:
+    include-message: always
+
+spring:
+  application:
+    name: ecoaula
+  profiles:
+    default: dev
+  messages:
+    basename: messages
+    encoding: UTF-8
+  thymeleaf:
+    cache: false
+    encoding: UTF-8
+  jpa:
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+
+# Configuración propia de EcoAula
+ecoaula:
+  seguridad:
+    clave-cifrado: ${ECOAULA_CLAVE_CIFRADO:ecoaula-clave-secreta-aes-256-ok!}
+    rate-limit-permits: 30
+    rate-limit-duration-minutes: 1
+  evaluacion:
+    umbral-aprobacion: 70
+    max-intentos-activos: 1
+  almacenamiento:
+    ruta-local: ${STORAGE_PATH:./storage/contenidos}
