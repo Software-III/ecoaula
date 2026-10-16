@@ -72,10 +72,10 @@ La cola del revisor inicia con 3 versiones y la Tasa First-Pass en 33,3 % (1 de 
 | # | Acción | Resultado esperado | ✔ |
 |---|---|---|---|
 | G1 | Entrar al listado de cursos | Cada curso muestra si está en el catálogo, sus cupos y si tiene evaluación | ☐ |
-| G2 | *Hojas de cálculo* → Gestionar lecciones → lección 2 → Versiones → Editar borrador → "Enviar esta versión a Revisión" | Mensaje: falta registrar la fuente y la licencia (Ley 23 de 1982) | ☐ |
+| G2 | *Hojas de cálculo* → Gestionar lecciones → lección 2 → Versiones → Editar borrador → "Guardar y enviar esta versión a Revisión Técnica" sin marcar la licencia | Mensaje: falta declarar la licencia (Ley 23 de 1982) | ☐ |
 | G3 | En el mismo borrador, agregar una imagen **sin** texto alternativo | Error: el texto alternativo es obligatorio (WCAG 1.1.1) | ☐ |
 | G4 | Agregar la imagen con texto alternativo y descripción detallada | Aparece en "Imágenes de la lección" | ☐ |
-| G5 | Escribir la fuente, marcar la licencia, guardar y enviar a revisión | "Ha sido enviada a revisión técnica"; queda EN_REVISION | ☐ |
+| G5 | Escribir la fuente, marcar la licencia y pulsar **directamente** "Guardar y enviar…" (sin guardar antes) | Se guardan los cambios y se envía: "Ha sido enviada a revisión técnica"; queda EN_REVISION | ☐ |
 | G6 | En una lección publicada, "Crear Nueva Versión en Borrador" | El borrador parte de la versión vigente (transcripción, audio, fuente e imágenes) | ☐ |
 
 ### 3.2 Curso nuevo y catálogo

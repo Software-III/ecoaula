@@ -19,6 +19,7 @@ Se tomó como **base la implementación de Leonardo** (ya revisada y fusionada e
 | First-Pass contaba la subsanación aprobada como "aprobada en primera revisión" | Indicador inflado (con los datos de prueba recién sembrados: 50 %, 2 de 4, en lugar de 33,3 %, 1 de 3) | `calcularIndicadores` excluye las versiones con `versionOrigen` (prueba nueva: `subsanacionNoCuentaComoPrimeraRevision`) |
 | El rechazo no enviaba los criterios marcados (formulario separado) | El informe de un rechazo no decía qué criterios sí se cumplían | Un solo formulario con dos botones (`formaction`) |
 | `AccesibilidadService.obtenerPerfilPorCorreo` crea el perfil por defecto en una transacción de solo lectura (código previo) | En MySQL falla el INSERT en cada página que ven gestor y revisor (no tienen perfil sembrado); en H2 no se nota | `@Transactional` sin `readOnly` |
+| En el editor de borradores, "Enviar a revisión" era un formulario aparte que solo enviaba el token CSRF | Lo marcado o escrito sin pulsar antes "Guardar" (por ejemplo la casilla de licencia) se perdía y el envío fallaba | El botón ahora es "Guardar y enviar" y pertenece al formulario del borrador (atributo `form`, `accion=enviar`) |
 | Agregar lección permitía cualquier número de orden | Huecos o duplicados rompen la navegación del aprendiz (lección n → n+1) | La lección se agrega siempre al final; al eliminar se renumera |
 
 ## 3. Reglas nuevas en el flujo del gestor

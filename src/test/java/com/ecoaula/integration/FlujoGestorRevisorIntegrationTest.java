@@ -168,6 +168,35 @@ class FlujoGestorRevisorIntegrationTest {
     }
 
     @Test
+    @DisplayName("Marcar la licencia y pulsar \"Guardar y enviar\" sin guardar antes envía la versión en un solo paso")
+    void guardarYEnviarEnUnSoloPaso() throws Exception {
+        String titulo = "Curso guardar y enviar " + System.nanoTime();
+        mockMvc.perform(nuevoCurso(titulo, "8")).andExpect(status().is3xxRedirection());
+        Curso curso = curso(titulo);
+        mockMvc.perform(post("/gestor/cursos/{id}/lecciones/nueva", curso.getId()).with(GESTOR).with(csrf())
+                .param("titulo", "Lección única")).andExpect(status().is3xxRedirection());
+        ContenidoVersion v1 = ultimaVersion(contenidoRepository.findByCursoIdAndOrden(curso.getId(), 1).orElseThrow());
+
+        // Guardar sin enviar: queda en borrador
+        mockMvc.perform(multipart("/gestor/versiones/{id}/editar", v1.getId())
+                        .file(new MockMultipartFile("archivoAudio", "a.wav", "audio/wav", AudioDemoGenerator.generarTonoSuaveWav(1, 440.0)))
+                        .with(GESTOR).with(csrf()).param("transcripcion", "Texto de la lección."))
+                .andExpect(redirectedUrl("/gestor/versiones/" + v1.getId() + "/editar"));
+        assertEquals(EstadoContenido.BORRADOR, versionRepository.findById(v1.getId()).orElseThrow().getEstado());
+
+        // Mismo envío que hace el navegador: casilla marcada y botón "Guardar y enviar" (accion=enviar)
+        mockMvc.perform(multipart("/gestor/versiones/{id}/editar", v1.getId()).with(GESTOR).with(csrf())
+                        .param("transcripcion", "Texto de la lección.")
+                        .param("fuenteMaterial", "Elaboración propia")
+                        .param("licenciaDeclarada", "true").param("_licenciaDeclarada", "on")
+                        .param("accion", "enviar"))
+                .andExpect(flash().attribute("mensajeExito", containsString("enviada a revisión")));
+        ContenidoVersion enviada = versionRepository.findById(v1.getId()).orElseThrow();
+        assertEquals(EstadoContenido.EN_REVISION, enviada.getEstado());
+        assertNotNull(enviada.getLicenciaDeclaradaEn());
+    }
+
+    @Test
     @DisplayName("Modificar y eliminar: título de lección, eliminación con renumeración, curso completo y reglas del catálogo")
     void modificarYEliminar() throws Exception {
         String titulo = "Curso editable " + System.nanoTime();

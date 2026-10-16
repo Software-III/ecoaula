@@ -52,7 +52,7 @@
             </p>
         </section>
 
-        <form th:action="@{/gestor/versiones/{id}/editar(id=${version.id})}"
+        <form id="form-borrador" th:action="@{/gestor/versiones/{id}/editar(id=${version.id})}"
               th:object="${borradorForm}"
               method="post"
               enctype="multipart/form-data"
@@ -151,14 +151,17 @@
             </div>
 
             <div th:unless="${version.tieneAudioYTranscripcion()}" class="alerta alerta-error" role="status">
-                <strong>Pendiente:</strong> Debe subir un archivo de audio y guardar la transcripción antes de poder habilitar el envío a revisión técnica.
+                <strong>Pendiente:</strong> La versión aún no tiene audio y transcripción guardados.
             </div>
-
-            <form th:if="${version.tieneAudioYTranscripcion()}" th:action="@{/gestor/versiones/{id}/enviar-revision(id=${version.id})}" method="post">
-                <button type="submit" class="boton-principal" style="background-color: var(--color-primario);">
-                    ✓ Enviar esta versión a Revisión Técnica
-                </button>
-            </form>
+            <p>
+                El botón guarda primero todo lo que haya escrito o marcado en el formulario (transcripción, audio, fuente y licencia)
+                y luego envía la versión a revisión. Si falta algún requisito, se lo indicará sin perder los cambios.
+            </p>
+            <!-- Pertenece al formulario del borrador (atributo form): así no se pierden los cambios sin guardar -->
+            <button th:if="${version.esBorrador()}" type="submit" form="form-borrador" name="accion" value="enviar"
+                    class="boton-principal" style="background-color: var(--color-primario);">
+                ✓ Guardar y enviar esta versión a Revisión Técnica
+            </button>
         </section>
     </main>
 

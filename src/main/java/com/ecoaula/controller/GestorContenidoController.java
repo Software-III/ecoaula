@@ -300,6 +300,7 @@ public class GestorContenidoController {
     @PostMapping("/versiones/{versionId}/editar")
     public String guardarBorrador(@PathVariable("versionId") Long versionId,
                                   @ModelAttribute("borradorForm") BorradorVersionForm form,
+                                  @RequestParam(value = "accion", required = false) String accion,
                                   Principal principal,
                                   RedirectAttributes redirectAttributes) {
         try {
@@ -314,6 +315,10 @@ public class GestorContenidoController {
         } catch (EcoAulaException ex) {
             redirectAttributes.addFlashAttribute("mensajeError", ex.getMessage());
             return "redirect:/gestor/versiones/" + versionId + "/editar";
+        }
+        // "Guardar y enviar": se guarda lo que el gestor acaba de escribir o marcar y luego se envía
+        if ("enviar".equals(accion)) {
+            return enviarARevision(versionId, principal, redirectAttributes);
         }
         redirectAttributes.addFlashAttribute("mensajeExito", "Borrador guardado exitosamente.");
         return "redirect:/gestor/versiones/" + versionId + "/editar";
