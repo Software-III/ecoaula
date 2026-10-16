@@ -35,6 +35,15 @@ public class DataInitializer implements CommandLineRunner {
     private final PasswordEncoder passwordEncoder;
     private final AlmacenamientoContenido almacenamientoContenido;
 
+    @org.springframework.beans.factory.annotation.Value("${ecoaula.seed.aprendiz-password:EcoAula2026!}")
+    private String passwordAprendiz;
+
+    @org.springframework.beans.factory.annotation.Value("${ecoaula.seed.gestor-password:GestorEcoAula2026!}")
+    private String passwordGestor;
+
+    @org.springframework.beans.factory.annotation.Value("${ecoaula.seed.revisor-password:RevisorEcoAula2026!}")
+    private String passwordRevisor;
+
     public DataInitializer(AprendizRepository aprendizRepository,
                            CursoRepository cursoRepository,
                            ContenidoRepository contenidoRepository,
@@ -59,7 +68,8 @@ public class DataInitializer implements CommandLineRunner {
     @Transactional
     public void run(String... args) {
         if (aprendizRepository.count() > 0) {
-            log.info("Datos de demostración ya existen. Omitiendo inicialización.");
+            actualizarContrasenasDemo();
+            log.info("Datos de demostración ya existen. Contraseñas de demo sincronizadas.");
             return;
         }
 
@@ -70,7 +80,7 @@ public class DataInitializer implements CommandLineRunner {
         demo.setNombreCompleto("Aprendiz de Demostración");
         demo.setCorreo("aprendiz@ecoaula.local");
         demo.setTelefono("3001234567");
-        demo.setPasswordHash(passwordEncoder.encode("EcoAula2026!"));
+        demo.setPasswordHash(passwordEncoder.encode(passwordAprendiz));
         demo.setRol(Rol.APRENDIZ);
         demo.setCondicionVisual("Baja visión severa con necesidad de alto contraste");
         demo.setConsentimientoDatos(true);
@@ -84,31 +94,31 @@ public class DataInitializer implements CommandLineRunner {
         demo.setPerfilAccesibilidad(perfil);
 
         aprendizRepository.save(demo);
-        log.info("Aprendiz de prueba creado: {} / EcoAula2026!", demo.getCorreo());
+        log.info("Aprendiz de prueba inicializado: {}", demo.getCorreo());
 
         // 1.1 Crear Gestor de Contenido de Demostración
         Aprendiz gestor = new Aprendiz();
         gestor.setNombreCompleto("Gestor de Contenido Demo");
         gestor.setCorreo("gestor@ecoaula.local");
         gestor.setTelefono("3009876543");
-        gestor.setPasswordHash(passwordEncoder.encode("GestorEcoAula2026!"));
+        gestor.setPasswordHash(passwordEncoder.encode(passwordGestor));
         gestor.setRol(Rol.GESTOR_CONTENIDO);
         gestor.setConsentimientoDatos(true);
         gestor.setFechaConsentimiento(LocalDateTime.now());
         gestor = aprendizRepository.save(gestor);
-        log.info("Gestor de contenido creado: {} / GestorEcoAula2026!", gestor.getCorreo());
+        log.info("Gestor de contenido inicializado: {}", gestor.getCorreo());
 
         // 1.2 Crear Revisor de Accesibilidad de Demostración
         Aprendiz revisor = new Aprendiz();
         revisor.setNombreCompleto("Revisor de Accesibilidad Demo");
         revisor.setCorreo("revisor@ecoaula.local");
         revisor.setTelefono("3005551234");
-        revisor.setPasswordHash(passwordEncoder.encode("RevisorEcoAula2026!"));
+        revisor.setPasswordHash(passwordEncoder.encode(passwordRevisor));
         revisor.setRol(Rol.REVISOR_ACCESIBILIDAD);
         revisor.setConsentimientoDatos(true);
         revisor.setFechaConsentimiento(LocalDateTime.now());
         aprendizRepository.save(revisor);
-        log.info("Revisor de accesibilidad creado: {} / RevisorEcoAula2026!", revisor.getCorreo());
+        log.info("Revisor de accesibilidad inicializado: {}", revisor.getCorreo());
 
         // 2. Generar archivo de audio base para demostraciones
         byte[] audioWav = AudioDemoGenerator.generarTonoSuaveWav(6, 440.0);
@@ -326,5 +336,20 @@ public class DataInitializer implements CommandLineRunner {
         opcionRepository.save(new OpcionPregunta(p, opc2, "Opción 2", b2));
         opcionRepository.save(new OpcionPregunta(p, opc3, "Opción 3", b3));
         opcionRepository.save(new OpcionPregunta(p, opc4, "Opción 4", b4));
+    }
+
+    private void actualizarContrasenasDemo() {
+        aprendizRepository.findByCorreo("aprendiz@ecoaula.local").ifPresent(a -> {
+            a.setPasswordHash(passwordEncoder.encode(passwordAprendiz));
+            aprendizRepository.save(a);
+        });
+        aprendizRepository.findByCorreo("gestor@ecoaula.local").ifPresent(g -> {
+            g.setPasswordHash(passwordEncoder.encode(passwordGestor));
+            aprendizRepository.save(g);
+        });
+        aprendizRepository.findByCorreo("revisor@ecoaula.local").ifPresent(r -> {
+            r.setPasswordHash(passwordEncoder.encode(passwordRevisor));
+            aprendizRepository.save(r);
+        });
     }
 }

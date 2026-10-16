@@ -64,6 +64,11 @@ public class RateLimitingFilter extends OncePerRequestFilter {
     }
 
     private String obtenerIpCliente(HttpServletRequest request) {
+        // X-Real-IP es inyectada directamente por Nginx desde $remote_addr y no puede ser falsificada por el cliente
+        String xRealIp = request.getHeader("X-Real-IP");
+        if (xRealIp != null && !xRealIp.isBlank()) {
+            return xRealIp.trim();
+        }
         String xForwardedFor = request.getHeader("X-Forwarded-For");
         if (xForwardedFor != null && !xForwardedFor.isBlank()) {
             return xForwardedFor.split(",")[0].trim();

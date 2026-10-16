@@ -1,5 +1,12 @@
 server:
   port: ${SERVER_PORT:8080}
+  forward-headers-strategy: framework
+  servlet:
+    session:
+      cookie:
+        http-only: true
+        secure: ${COOKIE_SECURE:false}
+        same-site: lax
   error:
     include-message: always
 
@@ -37,3 +44,7 @@ ecoaula:
     ruta-local: ${STORAGE_PATH:./storage/contenidos}
   audio:
     max-size-bytes: ${ECOAULA_AUDIO_MAX_SIZE_BYTES:15728640}
+  seed:
+    aprendiz-password: ${ECOAULA_SEED_APRENDIZ_PASSWORD:EcoAula2026!}
+    gestor-password: ${ECOAULA_SEED_GESTOR_PASSWORD:GestorEcoAula2026!}
+    revisor-password: ${ECOAULA_SEED_REVISOR_PASSWORD:RevisorEcoAula2026!}
