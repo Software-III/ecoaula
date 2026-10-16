@@ -11,7 +11,7 @@
 
 La solución corre sobre una instancia **AWS Lightsail** (Ubuntu 24.04 LTS, 2 vCPU, 2 GB RAM, 60 GB SSD NVMe, 2 GB Swap):
 1. **Nginx (Proxy Inverso):** Escucha en los puertos estándar 80 (HTTP) y 443 (HTTPS con certificado Let's Encrypt vía Certbot). Realiza la terminación TLS, redirige HTTP a HTTPS, establece `client_max_body_size 30M` para subida de audios, e inyecta la cabecera `X-Real-IP $remote_addr` para que el limitador de tasa de peticiones no sea falsificable.
-2. **Spring Boot (Monolito Modular):** Ejecuta bajo `systemd` como el servicio `ecoaula.service` en el puerto 8080 (solo accesible internamente en localhost). Consume sus secretos y credenciales exclusivamente desde `/etc/ecoaula/ecoaula.env`.
+2. **Spring Boot (Monolito Modular):** Ejecuta bajo `systemd` como el servicio `ecoaula.service` en el puerto 8080 (solo accesible internamente en localhost) bajo el perfil oficial `prod`. Consume sus secretos y credenciales exclusivamente desde `/etc/ecoaula/ecoaula.env`, validando de forma estricta la existencia de `ECOAULA_CLAVE_CIFRADO`.
 3. **MySQL 8.0 (Docker):** Corre en contenedor Docker oficial `ecoaula-mysql` con volumen persistente `ecoaula_mysql_data`. Expone el puerto `3307` **estrictamente vinculado a `127.0.0.1` (`127.0.0.1:3307:3306`)**, haciendo imposible el acceso directo desde el exterior.
 4. **Almacenamiento de Medios (ADR-08 / DEC-06):** Los archivos de audio MP3/WAV/OGG subidos por los gestores se persisten en `/home/ubuntu/ecoaula/storage/contenidos` en el sistema de archivos del servidor host, evitando pérdidas ante reinicios de contenedores o servicios.
 
