@@ -51,7 +51,6 @@ public class GestionContenidoService {
         return cursoRepository.findAll();
     }
 
-    @Transactional(readOnly = true)
     public Curso obtenerCurso(Long cursoId) {
         return cursoRepository.findById(cursoId)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Curso no encontrado con ID: " + cursoId));
@@ -87,7 +86,6 @@ public class GestionContenidoService {
         return contenidoRepository.findByCursoIdOrderByOrdenAsc(cursoId);
     }
 
-    @Transactional(readOnly = true)
     public Contenido obtenerLeccion(Long contenidoId) {
         return contenidoRepository.findById(contenidoId)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Lección no encontrada con ID: " + contenidoId));
@@ -117,7 +115,6 @@ public class GestionContenidoService {
         return contenido;
     }
 
-    @Transactional(readOnly = true)
     public ContenidoVersion obtenerVersion(Long versionId) {
         return versionRepository.findById(versionId)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Versión de contenido no encontrada con ID: " + versionId));
