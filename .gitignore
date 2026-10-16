@@ -1,16 +1,6 @@
-# Compiled class file
+# Archivos compilados y empaquetados
+target/
 *.class
-
-# Log file
-*.log
-
-# BlueJ files
-*.ctxt
-
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
-
-# Package Files #
 *.jar
 *.war
 *.nar
@@ -19,6 +9,32 @@
 *.tar.gz
 *.rar
 
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
-hs_err_pid*
-replay_pid*
+# Logs
+*.log
+logs/
+
+# Entorno y variables secretas
+.env
+.env.local
+*.env
+
+# IDEs y editores
+.idea/
+*.iml
+.vscode/
+.settings/
+.project
+.classpath
+.factorypath
+*.sublime-project
+*.sublime-workspace
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Almacenamiento local de archivos temporales (solo en la raíz)
+/storage/
+/temp-audio/
+/backups/
+

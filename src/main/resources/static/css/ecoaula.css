@@ -1,0 +1,681 @@
+/* ==========================================================================
+   EcoAula — Hoja de Estilos Accesible (WCAG 2.1 AA / NTC 5854)
+   Cumple ADR-01, ADR-02, ADR-05, ADR-07
+   ========================================================================== */
+
+:root {
+    --color-fondo: #FFFFFF;
+    --color-texto: #1A1A1A;
+    --color-texto-secundario: #333333;
+    --color-primario: #004085;
+    --color-primario-hover: #002752;
+    --color-foco: #002752;
+    --color-borde: #333333;
+    --color-fondo-panel: #F8F9FA;
+    --color-exito-fondo: #D4EDDA;
+    --color-exito-texto: #155724;
+    --color-exito-borde: #155724;
+    --color-error-fondo: #F8D7DA;
+    --color-error-texto: #721C24;
+    --color-error-borde: #721C24;
+    --fuente-base: 18px;
+    --ancho-maximo: 820px;
+}
+
+/* --------------------------------------------------------------------------
+   Modo Alto Contraste (ADR-07)
+   -------------------------------------------------------------------------- */
+body.modo-alto-contraste {
+    --color-fondo: #000000;
+    --color-texto: #FFFFFF;
+    --color-texto-secundario: #E0E0E0;
+    --color-primario: #FFFF00;
+    --color-primario-hover: #00FFFF;
+    --color-foco: #00FFFF;
+    --color-borde: #FFFFFF;
+    --color-fondo-panel: #111111;
+    --color-exito-fondo: #002200;
+    --color-exito-texto: #00FF00;
+    --color-exito-borde: #00FF00;
+    --color-error-fondo: #2B0000;
+    --color-error-texto: #FF6666;
+    --color-error-borde: #FF6666;
+}
+
+/* --------------------------------------------------------------------------
+   Tamaño de Texto Grande (ADR-07)
+   -------------------------------------------------------------------------- */
+body.texto-grande {
+    --fuente-base: 22px;
+}
+
+/* --------------------------------------------------------------------------
+   Reseteo Base y Tipografía
+   -------------------------------------------------------------------------- */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+html {
+    font-size: var(--fuente-base);
+    line-height: 1.6;
+    background-color: var(--color-fondo);
+    color: var(--color-texto);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--color-fondo);
+    color: var(--color-texto);
+    width: 100%;
+    min-width: 0;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+}
+
+/* Foco de teclado ultra visible en todos los elementos interactivos */
+a:focus,
+button:focus,
+input:focus,
+select:focus,
+textarea:focus,
+summary:focus,
+[tabindex]:focus {
+    outline: 4px solid var(--color-foco) !important;
+    outline-offset: 3px !important;
+}
+
+/* --------------------------------------------------------------------------
+   Enlace "Saltar al contenido principal" (Skip Link)
+   -------------------------------------------------------------------------- */
+.skip-link {
+    position: absolute;
+    top: -200px;
+    left: 1rem;
+    background: var(--color-primario);
+    color: #FFFFFF !important;
+    padding: 0.75rem 1.5rem;
+    z-index: 10000;
+    font-weight: bold;
+    text-decoration: underline;
+    border: 3px solid var(--color-foco);
+    border-radius: 4px;
+}
+
+.skip-link:focus {
+    top: 1rem;
+}
+
+/* --------------------------------------------------------------------------
+   Estructura en Columna Única (Landmarks)
+   -------------------------------------------------------------------------- */
+.encabezado-sitio {
+    background-color: var(--color-fondo-panel);
+    border-bottom: 2px solid var(--color-borde);
+    padding: 1rem;
+}
+
+.navegacion-principal ul {
+    list-style: none;
+    padding: 0;
+    margin: 0.5rem 0 0 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.navegacion-principal a {
+    color: var(--color-primario);
+    font-weight: bold;
+    text-decoration: underline;
+    padding: 0.25rem 0.5rem;
+}
+
+body.modo-alto-contraste .navegacion-principal a {
+    color: var(--color-primario);
+}
+
+.contenedor-principal {
+    max-width: var(--ancho-maximo);
+    margin: 0 auto;
+    padding: 1.5rem 1rem 3rem 1rem;
+}
+
+/* Encabezados */
+h1 {
+    font-size: 1.8rem;
+    line-height: 1.3;
+    margin-top: 0.5rem;
+    margin-bottom: 1.25rem;
+    color: var(--color-texto);
+}
+
+h2 {
+    font-size: 1.4rem;
+    line-height: 1.3;
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+    color: var(--color-texto);
+}
+
+h3 {
+    font-size: 1.2rem;
+    margin-top: 1.25rem;
+    margin-bottom: 0.75rem;
+}
+
+p, ul, ol {
+    margin-bottom: 1.25rem;
+}
+
+a {
+    color: var(--color-primario);
+    text-decoration: underline;
+}
+
+body.modo-alto-contraste a {
+    color: #FFFF00;
+}
+
+/* --------------------------------------------------------------------------
+   Alertas y Notificaciones de Estado (aria-live)
+   -------------------------------------------------------------------------- */
+.alerta {
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+    border-left: 8px solid;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.alerta-exito {
+    background-color: var(--color-exito-fondo);
+    color: var(--color-exito-texto);
+    border-color: var(--color-exito-borde);
+}
+
+.alerta-error {
+    background-color: var(--color-error-fondo);
+    color: var(--color-error-texto);
+    border-color: var(--color-error-borde);
+}
+
+.resumen-errores {
+    background-color: var(--color-error-fondo);
+    color: var(--color-error-texto);
+    border: 3px solid var(--color-error-borde);
+    border-radius: 4px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.resumen-errores ul {
+    margin: 0.5rem 0 0 1.25rem;
+    padding: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Formularios Accesibles
+   -------------------------------------------------------------------------- */
+.grupo-campo {
+    margin-bottom: 1.5rem;
+}
+
+label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 0.35rem;
+    color: var(--color-texto);
+}
+
+.ayuda-campo {
+    font-size: 0.95rem;
+    color: var(--color-texto-secundario);
+    margin-bottom: 0.35rem;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="tel"],
+select,
+textarea {
+    width: 100%;
+    min-height: 48px;
+    font-size: 1rem;
+    padding: 0.65rem 0.75rem;
+    border: 2px solid var(--color-borde);
+    background-color: var(--color-fondo);
+    color: var(--color-texto);
+    border-radius: 4px;
+}
+
+input[aria-invalid="true"],
+select[aria-invalid="true"] {
+    border: 3px solid var(--color-error-borde);
+}
+
+.error-campo {
+    display: block;
+    color: var(--color-error-texto);
+    font-weight: bold;
+    font-size: 0.95rem;
+    margin-top: 0.35rem;
+}
+
+body.modo-alto-contraste .error-campo {
+    color: #FF6666;
+}
+
+/* Fieldset y Legend */
+fieldset {
+    border: 2px solid var(--color-borde);
+    border-radius: 4px;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+    background-color: var(--color-fondo-panel);
+}
+
+legend {
+    font-weight: bold;
+    font-size: 1.15rem;
+    padding: 0 0.5rem;
+    color: var(--color-texto);
+}
+
+/* Casillas de verificación y botones de radio grandes */
+.opcion-seleccion {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+    min-height: 48px;
+}
+
+.opcion-seleccion input[type="radio"],
+.opcion-seleccion input[type="checkbox"] {
+    width: 24px;
+    height: 24px;
+    margin-top: 0.2rem;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.opcion-seleccion label {
+    font-weight: normal;
+    cursor: pointer;
+    margin-bottom: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Botones de Acción
+   -------------------------------------------------------------------------- */
+.boton-principal {
+    display: inline-block;
+    max-width: 100%;
+    min-height: 48px;
+    padding: 0.75rem 1.5rem;
+    font-size: 1.05rem;
+    font-weight: bold;
+    color: #FFFFFF;
+    background-color: var(--color-primario);
+    border: 2px solid var(--color-primario);
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+    text-align: center;
+    white-space: normal;
+    word-break: break-word;
+}
+
+.boton-principal:hover {
+    background-color: var(--color-primario-hover);
+}
+
+.boton-secundario {
+    display: inline-block;
+    max-width: 100%;
+    min-height: 48px;
+    padding: 0.75rem 1.5rem;
+    font-size: 1.05rem;
+    font-weight: bold;
+    color: var(--color-texto);
+    background-color: var(--color-fondo-panel);
+    border: 2px solid var(--color-borde);
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: underline;
+    text-align: center;
+    white-space: normal;
+    word-break: break-word;
+}
+
+body.modo-alto-contraste .boton-principal {
+    background-color: #000000;
+    color: #FFFF00;
+    border: 3px solid #FFFF00;
+}
+
+body.modo-alto-contraste .boton-principal:hover {
+    background-color: #FFFF00;
+    color: #000000;
+}
+
+body.modo-alto-contraste .boton-secundario {
+    background-color: #000000;
+    color: #FFFFFF;
+    border: 3px solid #FFFFFF;
+}
+
+/* --------------------------------------------------------------------------
+   Tarjetas de Cursos y Listas Lineales
+   -------------------------------------------------------------------------- */
+.lista-cursos {
+    list-style: none;
+    padding: 0;
+    margin: 1.5rem 0;
+}
+
+.tarjeta-curso {
+    border: 2px solid var(--color-borde);
+    border-radius: 4px;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+    background-color: var(--color-fondo-panel);
+    max-width: 100%;
+    word-break: break-word;
+}
+
+.metadato-curso {
+    font-weight: bold;
+    color: var(--color-texto-secundario);
+    margin-bottom: 0.5rem;
+}
+
+/* --------------------------------------------------------------------------
+   Reproductor de Audio Nativo y Transcripción (ADR-05)
+   -------------------------------------------------------------------------- */
+.seccion-audio {
+    margin: 1.5rem 0;
+}
+
+audio {
+    width: 100%;
+    max-width: 100%;
+    min-height: 54px;
+    margin-bottom: 1rem;
+}
+
+.transcripcion-caja {
+    background-color: var(--color-fondo-panel);
+    border: 2px solid var(--color-borde);
+    border-radius: 4px;
+    padding: 1.25rem;
+    margin-top: 1rem;
+    line-height: 1.8;
+    max-width: 100%;
+}
+
+.transcripcion-texto {
+    white-space: pre-wrap;
+    font-family: inherit;
+    margin-bottom: 1rem;
+    word-break: break-word;
+    overflow-wrap: break-word;
+}
+
+/* --------------------------------------------------------------------------
+   Certificado Accesible (ADR-06)
+   -------------------------------------------------------------------------- */
+.certificado-caja {
+    border: 4px double var(--color-borde);
+    border-radius: 8px;
+    padding: 2rem 1.25rem;
+    margin: 2rem 0;
+    background-color: var(--color-fondo-panel);
+    text-align: center;
+    max-width: 100%;
+    word-break: break-word;
+}
+
+.codigo-verificacion {
+    display: inline-block;
+    max-width: 100%;
+    font-family: monospace;
+    font-size: clamp(1rem, 4vw, 1.35rem);
+    letter-spacing: 1px;
+    padding: 0.5rem 0.75rem;
+    border: 2px dashed var(--color-borde);
+    margin: 1rem 0;
+    font-weight: bold;
+    word-break: break-all;
+    overflow-wrap: anywhere;
+    box-sizing: border-box;
+}
+
+/* --------------------------------------------------------------------------
+   Tablas Semánticas y Accesibles (WCAG 2.1 AA)
+   -------------------------------------------------------------------------- */
+.tabla-contenedor {
+    width: 100%;
+    overflow-x: auto;
+    margin: 1.5rem 0;
+}
+
+.tabla-accesible {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    background-color: var(--color-fondo);
+    color: var(--color-texto);
+    border: 2px solid var(--color-borde);
+}
+
+.tabla-accesible caption {
+    font-weight: bold;
+    font-size: 1.15rem;
+    text-align: left;
+    padding: 0.75rem 0.5rem;
+    caption-side: top;
+    color: var(--color-texto);
+}
+
+.tabla-accesible th,
+.tabla-accesible td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border: 1px solid var(--color-borde);
+    vertical-align: top;
+}
+
+.tabla-accesible th {
+    background-color: var(--color-fondo-panel);
+    font-weight: bold;
+}
+
+.tabla-accesible tbody tr:nth-child(even) {
+    background-color: var(--color-fondo-panel);
+}
+
+/* --------------------------------------------------------------------------
+   Etiquetas de Estado de Contenido (Sin color como único indicador)
+   -------------------------------------------------------------------------- */
+.etiqueta-estado {
+    display: inline-block;
+    padding: 0.35rem 0.65rem;
+    font-weight: bold;
+    font-size: 0.95rem;
+    border-radius: 4px;
+    border: 2px solid var(--color-borde);
+    text-transform: uppercase;
+}
+
+.estado-borrador {
+    background-color: #E2E3E5;
+    color: #383D41;
+    border-style: dashed;
+}
+
+.estado-en-revision {
+    background-color: #FFF3CD;
+    color: #856404;
+    border-style: dotted;
+}
+
+.estado-publicada {
+    background-color: var(--color-exito-fondo);
+    color: var(--color-exito-texto);
+    border-color: var(--color-exito-borde);
+    border-style: solid;
+}
+
+.estado-rechazada {
+    background-color: var(--color-error-fondo);
+    color: var(--color-error-texto);
+    border-color: var(--color-error-borde);
+    border-style: double;
+}
+
+.estado-retirada {
+    background-color: #E2E3E5;
+    color: #383D41;
+    text-decoration: line-through;
+}
+
+body.modo-alto-contraste .etiqueta-estado {
+    background-color: #000000;
+    color: #FFFFFF;
+    border: 2px solid #FFFFFF;
+}
+
+/* --------------------------------------------------------------------------
+   Tarjetas de Indicadores de Calidad
+   -------------------------------------------------------------------------- */
+.rejilla-indicadores {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem 0;
+}
+
+.tarjeta-indicador {
+    background-color: var(--color-fondo-panel);
+    border: 3px solid var(--color-borde);
+    border-radius: 6px;
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.tarjeta-indicador .valor-indicador {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: var(--color-primario);
+    margin: 0.5rem 0;
+}
+
+body.modo-alto-contraste .tarjeta-indicador .valor-indicador {
+    color: #FFFF00;
+}
+
+/* --------------------------------------------------------------------------
+   Caja de Criterios de Accesibilidad (Lista de Chequeo)
+   -------------------------------------------------------------------------- */
+.item-criterio {
+    border: 2px solid var(--color-borde);
+    border-radius: 4px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    background-color: var(--color-fondo-panel);
+}
+
+.item-criterio-referencia {
+    font-size: 0.9rem;
+    color: var(--color-texto-secundario);
+    margin-top: 0.25rem;
+    font-style: italic;
+}
+
+/* --------------------------------------------------------------------------
+   Informe de revisión de accesibilidad (Proceso 2)
+   -------------------------------------------------------------------------- */
+.tabla-informe {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1.5rem;
+}
+
+.tabla-informe caption {
+    text-align: left;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.tabla-informe th,
+.tabla-informe td {
+    border: 1px solid var(--color-borde);
+    padding: 0.6rem;
+    text-align: left;
+    vertical-align: top;
+    overflow-wrap: anywhere;
+}
+
+.tabla-informe thead th {
+    background-color: var(--color-fondo-panel);
+}
+
+/* Reflow a 320 px (WCAG 1.4.10): cada fila se apila como bloque con su etiqueta */
+@media (max-width: 600px) {
+    .tabla-informe thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+    }
+
+    .tabla-informe tr,
+    .tabla-informe td,
+    .tabla-informe th[scope="row"] {
+        display: block;
+    }
+
+    .tabla-informe tr {
+        border: 1px solid var(--color-borde);
+        margin-bottom: 0.75rem;
+    }
+
+    .tabla-informe td {
+        border: none;
+    }
+
+    .tabla-informe td::before {
+        content: attr(data-etiqueta) ": ";
+        font-weight: bold;
+    }
+}
+
+@media print {
+    .skip-link,
+    .encabezado-sitio,
+    .no-imprimir {
+        display: none !important;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   Imágenes de lecciones con alternativa textual (WCAG 1.1.1)
+   -------------------------------------------------------------------------- */
+.figura-leccion {
+    margin: 0 0 1rem 0;
+}
+
+.figura-leccion img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    border: 1px solid var(--color-borde);
+    margin-bottom: 0.5rem;
+}

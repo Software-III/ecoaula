@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Cursos y Contenidos — EcoAula</title>
+    <link rel="stylesheet" th:href="@{/css/ecoaula.css}">
+</head>
+<body th:class="${(perfilAccesibilidad != null and perfilAccesibilidad.modoVisual != null and perfilAccesibilidad.modoVisual.name() == 'ALTO_CONTRASTE' ? 'modo-alto-contraste ' : '') + (perfilAccesibilidad != null and perfilAccesibilidad.tamanoTexto != null and perfilAccesibilidad.tamanoTexto.name() == 'GRANDE' ? 'texto-grande ' : '') + (perfilAccesibilidad != null and perfilAccesibilidad.soloAudio ? 'solo-audio ' : '')}">
+
+    <a href="#contenido-principal" class="skip-link">Saltar al contenido principal</a>
+
+    <header class="encabezado-sitio" role="banner">
+        <div class="contenedor-principal">
+            <div style="font-size: 1.5rem; font-weight: bold;">
+                <a th:href="@{/gestor/cursos}" style="text-decoration: none; color: inherit;">EcoAula — Portal del Gestor</a>
+            </div>
+            <nav class="navegacion-principal" role="navigation" aria-label="Navegación principal">
+                <ul>
+                    <li><a th:href="@{/gestor/cursos}" aria-current="page">Mis Cursos y Contenidos</a></li>
+                    <li><a th:href="@{/gestor/cursos/nuevo}">Crear Nuevo Curso</a></li>
+                    <li><a th:href="@{/informes-revision}">Informes de revisión</a></li>
+                    <li><a th:href="@{/reportes-barrera}">Reportes de barreras</a></li>
+                    <li><a th:href="@{/indicadores}">Indicadores</a></li>
+                    <li><a th:href="@{/perfil}">Mi Perfil</a></li>
+                    <li>
+                        <form th:action="@{/logout}" method="post" style="display: inline;">
+                            <button type="submit" class="boton-secundario" style="min-height: 38px; padding: 0.25rem 0.75rem; font-size: 1rem;">Cerrar Sesión</button>
+                        </form>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main id="contenido-principal" class="contenedor-principal" role="main" tabindex="-1">
+        <h1>Gestión de Cursos y Contenido Accesible</h1>
+
+        <!-- Mensajes de estado -->
+        <div th:if="${mensajeExito != null}" class="alerta alerta-exito" role="status" aria-live="polite" th:text="${mensajeExito}"></div>
+        <div th:if="${mensajeError != null}" class="alerta alerta-error" role="alert" th:text="${mensajeError}"></div>
+
+        <p>Bienvenido al panel del gestor de contenido. Aquí puede crear y editar cursos, agregar lecciones, subir audios y transcripciones, y gestionar el ciclo de vida versionado (ADR-08).</p>
+
+        <div style="margin: 1.5rem 0;">
+            <a th:href="@{/gestor/cursos/nuevo}" class="boton-principal">+ Crear Nuevo Curso</a>
+        </div>
+
+        <section aria-labelledby="titulo-mis-cursos">
+            <h2 id="titulo-mis-cursos">Cursos Registrados en la Plataforma</h2>
+
+            <div th:if="${cursos.empty}" class="alerta alerta-error">
+                No hay cursos creados aún. Utilice el botón superior para crear el primer curso.
+            </div>
+
+            <ul class="lista-cursos" th:unless="${cursos.empty}">
+                <li th:each="curso : ${cursos}" class="tarjeta-curso" th:id="'curso-' + ${curso.id}">
+                    <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0.5rem;">
+                        <h3 th:text="${curso.titulo}" style="margin: 0; font-size: 1.4rem;">Título del curso</h3>
+                        <span th:if="${curso.activo}" class="etiqueta-estado estado-publicada">En el catálogo</span>
+                        <span th:unless="${curso.activo}" class="etiqueta-estado estado-borrador">Fuera del catálogo</span>
+                    </div>
+
+                    <p class="metadato-curso" style="margin-top: 0.5rem;">
+                        <span th:text="${curso.horas} + ' horas'">10 horas</span> · 
+                        <span th:text="${curso.area}">Área</span> · 
+                        <span th:text="${curso.modalidad}">Modalidad</span> ·
+                        <span th:text="${curso.cupoMaximo != null} ? ${matriculadosPorCurso.get(curso.id)} + ' de ' + ${curso.cupoMaximo} + ' cupos ocupados' : ${matriculadosPorCurso.get(curso.id)} + ' aprendiz(es) matriculado(s), sin límite de cupo'">Cupos</span> ·
+                        <span th:text="${evaluacionPorCurso.get(curso.id)} ? 'Con evaluación final' : 'Sin evaluación final'">Evaluación</span>
+                    </p>
+
+                    <p th:text="${curso.descripcion}">Descripción del curso...</p>
+
+                    <!-- Resumen de lecciones -->
+                    <div style="margin: 1rem 0; border-top: 1px solid var(--color-borde); padding-top: 0.75rem;">
+                        <h4 style="margin: 0.5rem 0; font-size: 1.1rem;">
+                            Lecciones del curso (<span th:text="${leccionesPorCurso.get(curso.id).size()}">0</span>)
+                        </h4>
+
+                        <div th:if="${leccionesPorCurso.get(curso.id).empty}">
+                            <p style="font-style: italic;">Este curso aún no tiene lecciones asignadas.</p>
+                        </div>
+
+                        <ul th:unless="${leccionesPorCurso.get(curso.id).empty}" style="list-style-type: none; padding-left: 0;">
+                            <li th:each="leccion : ${leccionesPorCurso.get(curso.id)}" style="margin-bottom: 0.5rem; padding: 0.5rem; border: 1px solid var(--color-borde); border-radius: 4px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                                <span>
+                                    <strong th:text="'Lección ' + ${leccion.orden} + ': '">Lección 1:</strong>
+                                    <span th:text="${leccion.titulo}">Título de la lección</span>
+                                </span>
+                                <span>
+                                    <span th:replace="~{gestor/fragmentos :: estado(${estadosLeccion.get(leccion.id)})}">Estado</span>
+                                    <a th:href="@{/gestor/lecciones/{id}/versiones(id=${leccion.id})}" style="margin-left: 0.75rem;">Versiones</a>
+                                </span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1.25rem;">
+                        <a th:href="@{/gestor/cursos/{id}/lecciones(id=${curso.id})}" class="boton-principal">
+                            Gestionar Lecciones
+                        </a>
+                        <a th:unless="${curso.activo}" th:href="@{/gestor/cursos/{id}/editar(id=${curso.id})}" class="boton-secundario"
+                           th:attr="aria-label='Editar o eliminar el curso ' + ${curso.titulo}">
+                            Editar o eliminar curso
+                        </a>
+                        <form th:unless="${curso.activo}" th:action="@{/gestor/cursos/{id}/publicar(id=${curso.id})}" method="post">
+                            <button type="submit" class="boton-principal" th:attr="aria-label='Publicar en el catálogo el curso ' + ${curso.titulo}">
+                                Publicar en el catálogo
+                            </button>
+                        </form>
+                        <form th:if="${curso.activo}" th:action="@{/gestor/cursos/{id}/retirar(id=${curso.id})}" method="post">
+                            <button type="submit" class="boton-secundario" th:attr="aria-label='Retirar del catálogo el curso ' + ${curso.titulo}">
+                                Retirar del catálogo
+                            </button>
+                        </form>
+                    </div>
+                    <p th:unless="${curso.activo}" class="ayuda-campo">
+                        Para publicarlo, todas sus lecciones deben tener una versión aprobada por el revisor y el curso debe tener evaluación final.
+                    </p>
+                    <p th:if="${curso.activo}" class="ayuda-campo">
+                        Para modificar sus datos o sus lecciones, retírelo del catálogo. Las correcciones de contenido se hacen con versiones nuevas.
+                    </p>
+                </li>
+            </ul>
+        </section>
+    </main>
+
+</body>
+</html>

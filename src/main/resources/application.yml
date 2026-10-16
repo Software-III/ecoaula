@@ -1,0 +1,51 @@
+server:
+  port: ${SERVER_PORT:8080}
+  address: ${SERVER_ADDRESS:127.0.0.1}
+  forward-headers-strategy: framework
+  servlet:
+    session:
+      cookie:
+        http-only: true
+        secure: ${COOKIE_SECURE:false}
+        same-site: lax
+  error:
+    include-message: always
+
+spring:
+  application:
+    name: ecoaula
+  profiles:
+    default: dev
+  messages:
+    basename: messages
+    encoding: UTF-8
+  thymeleaf:
+    cache: false
+    encoding: UTF-8
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 25MB
+  jpa:
+    open-in-view: true
+    properties:
+      hibernate:
+        format_sql: true
+
+# Configuración propia de EcoAula
+ecoaula:
+  seguridad:
+    clave-cifrado: ${ECOAULA_CLAVE_CIFRADO:ecoaula-clave-secreta-aes-256-ok!}
+    rate-limit-permits: 30
+    rate-limit-duration-minutes: 1
+  evaluacion:
+    umbral-aprobacion: 70
+    max-intentos-activos: 1
+  almacenamiento:
+    ruta-local: ${STORAGE_PATH:./storage/contenidos}
+  audio:
+    max-size-bytes: ${ECOAULA_AUDIO_MAX_SIZE_BYTES:15728640}
+  seed:
+    aprendiz-password: ${ECOAULA_SEED_APRENDIZ_PASSWORD:EcoAula2026!}
+    gestor-password: ${ECOAULA_SEED_GESTOR_PASSWORD:GestorEcoAula2026!}
+    revisor-password: ${ECOAULA_SEED_REVISOR_PASSWORD:RevisorEcoAula2026!}

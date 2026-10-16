@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${titulo} + ' — EcoAula'">EcoAula</title>
+    <link rel="stylesheet" th:href="@{/css/ecoaula.css}">
+</head>
+<body th:class="${(perfilAccesibilidad != null and perfilAccesibilidad.modoVisual != null and perfilAccesibilidad.modoVisual.name() == 'ALTO_CONTRASTE' ? 'modo-alto-contraste ' : '') + (perfilAccesibilidad != null and perfilAccesibilidad.tamanoTexto != null and perfilAccesibilidad.tamanoTexto.name() == 'GRANDE' ? 'texto-grande ' : '') + (perfilAccesibilidad != null and perfilAccesibilidad.soloAudio ? 'solo-audio ' : '')}">
+
+    <a href="#contenido-principal" class="skip-link">Saltar al contenido principal</a>
+
+    <header class="encabezado-sitio" role="banner">
+        <div class="contenedor-principal">
+            <div style="font-size: 1.5rem; font-weight: bold;">EcoAula</div>
+            <nav class="navegacion-principal" role="navigation" aria-label="Navegación principal">
+                <ul>
+                    <li sec:authorize="hasRole('GESTOR_CONTENIDO')"><a th:href="@{/gestor/cursos}">Gestión de contenido</a></li>
+                    <li sec:authorize="hasRole('REVISOR_ACCESIBILIDAD')"><a th:href="@{/revisor/cola}">Revisión de accesibilidad</a></li>
+                    <li sec:authorize="hasAnyRole('GESTOR_CONTENIDO','REVISOR_ACCESIBILIDAD')"><a th:href="@{/informes-revision}">Informes de revisión</a></li>
+                    <li><a th:href="@{/reportes-barrera}">Reportes de barreras</a></li>
+                    <li><a th:href="@{/indicadores}" aria-current="page">Indicadores</a></li>
+                    <li><a th:href="@{/perfil}">Mi Perfil</a></li>
+                    <li sec:authorize="isAuthenticated()">
+                        <form th:action="@{/logout}" method="post" style="display: inline;">
+                            <button type="submit" class="boton-secundario" style="min-height: 38px; padding: 0.25rem 0.75rem; font-size: 1rem;">Cerrar Sesión</button>
+                        </form>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main id="contenido-principal" class="contenedor-principal" role="main" tabindex="-1">
+        <h1>Indicadores de calidad</h1>
+
+        <p>
+            Indicadores clave de los Procesos 1 y 2 definidos en el Plan de Gestión de la Calidad (secciones 3.3 y 3.4),
+            calculados con el uso real de la plataforma. Cada indicador explica cómo se calcula.
+        </p>
+
+        <form th:action="@{/indicadores}" method="get" aria-label="Periodo de los indicadores">
+            <div style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end;">
+                <div class="grupo-campo">
+                    <label for="dias">Periodo</label>
+                    <select id="dias" name="dias">
+                        <option th:each="d : ${periodos}" th:value="${d}" th:text="'Últimos ' + ${d} + ' días'"
+                                th:selected="${tablero.dias() == d}">Últimos 30 días</option>
+                    </select>
+                </div>
+                <button type="submit" class="boton-secundario">Actualizar</button>
+            </div>
+        </form>
+
+        <th:block th:each="bloque, it : ${ {tablero.proceso1(), tablero.proceso2()} }">
+            <section th:attr="aria-labelledby='titulo-proceso-' + ${it.count}" style="margin-top: 2rem;">
+                <h2 th:id="'titulo-proceso-' + ${it.count}"
+                    th:text="${it.count == 1} ? 'Proceso 1: Inscripción y matrícula accesible' : 'Proceso 2: Gestión de contenido accesible'">Proceso</h2>
+                <table class="tabla-informe">
+                    <caption th:text="'Indicadores del proceso ' + ${it.count} + ' en los últimos ' + ${tablero.dias()} + ' días'">Indicadores</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Indicador</th>
+                            <th scope="col">Valor</th>
+                            <th scope="col">Meta</th>
+                            <th scope="col">Resultado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="ind : ${bloque}">
+                            <th scope="row" data-etiqueta="Indicador">
+                                <span th:text="${ind.nombre()}">Indicador</span>
+                                <span class="ayuda-campo" style="display: block; font-weight: normal;" th:text="${ind.calculo()}">Cálculo</span>
+                            </th>
+                            <td data-etiqueta="Valor" th:text="${ind.valor()}">Valor</td>
+                            <td data-etiqueta="Meta" th:text="${ind.meta()}">Meta</td>
+                            <td data-etiqueta="Resultado"><strong th:text="${ind.meta() == 'Referencia'} ? 'Sin meta' : (${ind.cumple() == null} ? 'Sin datos' : (${ind.cumple()} ? 'Cumple' : 'No cumple'))">Resultado</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+        </th:block>
+
+        <section aria-labelledby="titulo-reportes" style="margin-top: 2rem;">
+            <h2 id="titulo-reportes">Atención de reportes de barreras</h2>
+            <ul>
+                <li th:text="'Reportes pendientes (abiertos o en atención): ' + ${tablero.reportesPendientes()}">Pendientes</li>
+                <li th:text="'Tiempo promedio de atención: ' + ${tablero.tiempoPromedioAtencion()}">Tiempo</li>
+            </ul>
+            <p><a th:href="@{/reportes-barrera}">Ver los reportes de barreras</a></p>
+        </section>
+
+        <section aria-labelledby="titulo-riesgo" style="margin-top: 2rem;">
+            <h2 id="titulo-riesgo" th:text="'Aprendices en riesgo de abandono (' + ${#lists.size(tablero.enRiesgo())} + ')'">Aprendices en riesgo</h2>
+            <p>Aprendices con un curso incompleto y sin actividad durante 7 días o más, para hacerles seguimiento antes de que abandonen.</p>
+            <p th:if="${#lists.isEmpty(tablero.enRiesgo())}">No hay aprendices en riesgo de abandono.</p>
+            <table th:unless="${#lists.isEmpty(tablero.enRiesgo())}" class="tabla-informe">
+                <caption>Aprendices con cursos incompletos e inactivos</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Aprendiz</th>
+                        <th scope="col">Curso</th>
+                        <th scope="col">Avance</th>
+                        <th scope="col">Días sin actividad</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="r : ${tablero.enRiesgo()}">
+                        <td data-etiqueta="Aprendiz" th:text="${r.correo()}">Correo</td>
+                        <td data-etiqueta="Curso" th:text="${r.curso()}">Curso</td>
+                        <td data-etiqueta="Avance" th:text="${r.completadas()} + ' de ' + ${r.total()} + ' lecciones'">Avance</td>
+                        <td data-etiqueta="Días sin actividad" th:text="${r.diasInactivo()}">Días</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+</body>
+</html>
