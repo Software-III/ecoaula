@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${titulo != null ? titulo : 'Lecciones — EcoAula'}">Lecciones — EcoAula</title>
+    <link rel="stylesheet" th:href="@{/css/ecoaula.css}">
+</head>
+<body th:class="${(perfilAccesibilidad != null and perfilAccesibilidad.modoVisual != null and perfilAccesibilidad.modoVisual.name() == 'ALTO_CONTRASTE' ? 'modo-alto-contraste ' : '') + (perfilAccesibilidad != null and perfilAccesibilidad.tamanoTexto != null and perfilAccesibilidad.tamanoTexto.name() == 'GRANDE' ? 'texto-grande ' : '') + (perfilAccesibilidad != null and perfilAccesibilidad.soloAudio ? 'solo-audio ' : '')}">
+
+    <a href="#contenido-principal" class="skip-link">Saltar al contenido principal</a>
+
+    <header class="encabezado-sitio" role="banner">
+        <div class="contenedor-principal">
+            <div style="font-size: 1.5rem; font-weight: bold;">
+                <a th:href="@{/gestor/cursos}" style="text-decoration: none; color: inherit;">EcoAula — Portal del Gestor</a>
+            </div>
+            <nav class="navegacion-principal" role="navigation" aria-label="Navegación principal">
+                <ul>
+                    <li><a th:href="@{/gestor/cursos}">Mis Cursos y Contenidos</a></li>
+                    <li><a th:href="@{/perfil}">Mi Perfil</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main id="contenido-principal" class="contenedor-principal" role="main" tabindex="-1">
+        <nav aria-label="Miga de pan" style="margin-bottom: 1rem;">
+            <a th:href="@{/gestor/cursos}">← Volver al listado de cursos</a>
+        </nav>
+
+        <h1 th:text="'Lecciones de: ' + ${curso.titulo}">Lecciones del Curso</h1>
+
+        <!-- Mensajes de estado -->
+        <div th:if="${mensajeExito != null}" class="alerta alerta-exito" role="status" aria-live="polite" th:text="${mensajeExito}"></div>
+        <div th:if="${mensajeError != null}" class="alerta alerta-error" role="alert" th:text="${mensajeError}"></div>
+
+        <section aria-labelledby="seccion-tabla-lecciones">
+            <h2 id="seccion-tabla-lecciones">Lista de Lecciones del Curso</h2>
+
+            <div th:if="${lecciones.empty}" class="alerta alerta-error">
+                Este curso no tiene lecciones creadas todavía. Utilice el formulario inferior para agregar la primera lección.
+            </div>
+
+            <div class="tabla-contenedor" th:unless="${lecciones.empty}">
+                <table class="tabla-accesible">
+                    <caption>Lista de lecciones ordenadas para el curso: <span th:text="${curso.titulo}">Curso</span></caption>
+                    <thead>
+                        <tr>
+                            <th scope="col" style="width: 10%;">Orden</th>
+                            <th scope="col" style="width: 45%;">Título de la lección</th>
+                            <th scope="col" style="width: 25%;">Última versión y estado</th>
+                            <th scope="col" style="width: 20%;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="leccion : ${lecciones}">
+                            <td th:text="${leccion.orden}">1</td>
+                            <td>
+                                <strong th:text="${leccion.titulo}">Título de la lección</strong>
+                            </td>
+                            <td>
+                                <div th:if="${ultimasVersiones.containsKey(leccion.id)}">
+                                    <span th:text="'Versión ' + ${ultimasVersiones.get(leccion.id).numeroVersion}">v1</span>
+                                    <span th:text="'[' + ${ultimasVersiones.get(leccion.id).estado} + ']'"
+                                          th:class="'etiqueta-estado ' + (${ultimasVersiones.get(leccion.id).estado.name() == 'PUBLICADA' ? 'estado-publicada' : (ultimasVersiones.get(leccion.id).estado.name() == 'EN_REVISION' ? 'estado-en-revision' : (ultimasVersiones.get(leccion.id).estado.name() == 'RECHAZADA' ? 'estado-rechazada' : 'estado-borrador'))})">
+                                        [BORRADOR]
+                                    </span>
+                                </div>
+                                <span th:unless="${ultimasVersiones.containsKey(leccion.id)}">Sin versiones</span>
+                            </td>
+                            <td>
+                                <a th:href="@{/gestor/lecciones/{id}/versiones(id=${leccion.id})}" class="boton-secundario" style="min-height: 38px; padding: 0.35rem 0.75rem; font-size: 0.95rem;">
+                                    Ver versiones
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Formulario accesible para agregar una nueva lección -->
+        <section aria-labelledby="seccion-nueva-leccion" style="margin-top: 2.5rem; border-top: 2px solid var(--color-borde); padding-top: 1.5rem;">
+            <h2 id="seccion-nueva-leccion">Agregar Nueva Lección al Curso</h2>
+            <p>Al agregar una lección, se creará automáticamente la versión 1 en estado <strong>BORRADOR</strong> para que pueda redactar la transcripción y subir el audio nativo.</p>
+
+            <form th:action="@{/gestor/cursos/{id}/lecciones/nueva(id=${curso.id})}"
+                  th:object="${leccionForm}"
+                  method="post"
+                  novalidate>
+
+                <div class="grupo-campo">
+                    <label for="tituloLeccion">Título de la lección *</label>
+                    <input type="text" id="tituloLeccion" th:field="*{titulo}" required th:aria-invalid="${#fields.hasErrors('titulo')}">
+                    <span th:if="${#fields.hasErrors('titulo')}" th:errors="*{titulo}" class="error-campo" role="alert"></span>
+                </div>
+
+                <div class="grupo-campo">
+                    <label for="ordenLeccion">Número de orden secuencial *</label>
+                    <div class="ayuda-campo" id="ayuda-orden">Determina la posición en que los aprendices recorrerán la lección.</div>
+                    <input type="number" id="ordenLeccion" th:field="*{orden}" min="1" required aria-describedby="ayuda-orden" th:aria-invalid="${#fields.hasErrors('orden')}">
+                    <span th:if="${#fields.hasErrors('orden')}" th:errors="*{orden}" class="error-campo" role="alert"></span>
+                </div>
+
+                <div style="margin-top: 1.5rem;">
+                    <button type="submit" class="boton-principal">+ Agregar Lección</button>
+                </div>
+            </form>
+        </section>
+    </main>
+
+</body>
+</html>

@@ -19,8 +19,16 @@
             </div>
             <nav class="navegacion-principal" role="navigation" aria-label="Navegación principal">
                 <ul>
-                    <li><a th:href="@{/cursos}">Catálogo de Cursos</a></li>
-                    <li sec:authorize="isAuthenticated()"><a th:href="@{/perfil}">Mi Perfil de Accesibilidad</a></li>
+                    <!-- Enlaces para Gestor de Contenido -->
+                    <li sec:authorize="hasRole('GESTOR_CONTENIDO')"><a th:href="@{/gestor/cursos}">Mis Cursos y Contenidos</a></li>
+
+                    <!-- Enlaces para Revisor de Accesibilidad -->
+                    <li sec:authorize="hasRole('REVISOR_ACCESIBILIDAD')"><a th:href="@{/revisor/cola}">Cola de Revisión</a></li>
+                    <li sec:authorize="hasRole('REVISOR_ACCESIBILIDAD')"><a th:href="@{/revisor/indicadores}">Indicadores de Calidad</a></li>
+
+                    <!-- Enlaces para Aprendiz o Público -->
+                    <li sec:authorize="hasRole('APRENDIZ') or isAnonymous()"><a th:href="@{/cursos}">Catálogo de Cursos</a></li>
+                    <li sec:authorize="isAuthenticated()"><a th:href="@{/perfil}">Mi Perfil</a></li>
                     <li sec:authorize="isAnonymous()"><a th:href="@{/registro}">Registrarme</a></li>
                     <li sec:authorize="isAnonymous()"><a th:href="@{/login}">Iniciar Sesión</a></li>
                     <li sec:authorize="isAuthenticated()">

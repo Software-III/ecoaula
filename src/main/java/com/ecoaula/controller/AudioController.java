@@ -27,6 +27,8 @@ public class AudioController {
         MediaType mediaType = MediaType.parseMediaType("audio/wav");
         if (nombreArchivo.toLowerCase().endsWith(".mp3")) {
             mediaType = MediaType.parseMediaType("audio/mpeg");
+        } else if (nombreArchivo.toLowerCase().endsWith(".ogg")) {
+            mediaType = MediaType.parseMediaType("audio/ogg");
         }
 
         return ResponseEntity.ok()

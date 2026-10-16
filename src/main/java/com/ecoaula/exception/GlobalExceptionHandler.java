@@ -46,6 +46,26 @@ public class GlobalExceptionHandler {
         return "error";
     }
 
+    @ExceptionHandler(ReglaNegocioException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public String manejarReglaNegocio(ReglaNegocioException ex, Model model) {
+        log.warn("Violación de regla de negocio: {}", ex.getMessage());
+        model.addAttribute("codigoError", "400");
+        model.addAttribute("tituloError", "Acción no permitida");
+        model.addAttribute("mensajeError", ex.getMessage());
+        return "error";
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public String manejarIllegalArgument(IllegalArgumentException ex, Model model) {
+        log.warn("Parámetro inválido: {}", ex.getMessage());
+        model.addAttribute("codigoError", "400");
+        model.addAttribute("tituloError", "Solicitud inválida");
+        model.addAttribute("mensajeError", ex.getMessage());
+        return "error";
+    }
+
     @ExceptionHandler(AccesoDenegadoException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public String manejarAccesoDenegado(AccesoDenegadoException ex, Model model) {

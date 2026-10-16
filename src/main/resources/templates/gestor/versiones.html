@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${titulo != null ? titulo : 'Versiones de Lección — EcoAula'}">Versiones — EcoAula</title>
+    <link rel="stylesheet" th:href="@{/css/ecoaula.css}">
+</head>
+<body th:class="${(perfilAccesibilidad != null and perfilAccesibilidad.modoVisual != null and perfilAccesibilidad.modoVisual.name() == 'ALTO_CONTRASTE' ? 'modo-alto-contraste ' : '') + (perfilAccesibilidad != null and perfilAccesibilidad.tamanoTexto != null and perfilAccesibilidad.tamanoTexto.name() == 'GRANDE' ? 'texto-grande ' : '') + (perfilAccesibilidad != null and perfilAccesibilidad.soloAudio ? 'solo-audio ' : '')}">
+
+    <a href="#contenido-principal" class="skip-link">Saltar al contenido principal</a>
+
+    <header class="encabezado-sitio" role="banner">
+        <div class="contenedor-principal">
+            <div style="font-size: 1.5rem; font-weight: bold;">
+                <a th:href="@{/gestor/cursos}" style="text-decoration: none; color: inherit;">EcoAula — Portal del Gestor</a>
+            </div>
+            <nav class="navegacion-principal" role="navigation" aria-label="Navegación principal">
+                <ul>
+                    <li><a th:href="@{/gestor/cursos}">Mis Cursos y Contenidos</a></li>
+                    <li><a th:href="@{/perfil}">Mi Perfil</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main id="contenido-principal" class="contenedor-principal" role="main" tabindex="-1">
+        <nav aria-label="Miga de pan" style="margin-bottom: 1rem;">
+            <a th:href="@{/gestor/cursos/{id}/lecciones(id=${leccion.curso.id})}">← Volver a las lecciones de <span th:text="${leccion.curso.titulo}">Curso</span></a>
+        </nav>
+
+        <h1 th:text="'Versiones de: Lección ' + ${leccion.orden} + ' — ' + ${leccion.titulo}">Versiones de Lección</h1>
+
+        <!-- Mensajes de estado -->
+        <div th:if="${mensajeExito != null}" class="alerta alerta-exito" role="status" aria-live="polite" th:text="${mensajeExito}"></div>
+        <div th:if="${mensajeError != null}" class="alerta alerta-error" role="alert" th:text="${mensajeError}"></div>
+
+        <p><strong>Principio de inmutabilidad (ADR-08):</strong> Las versiones publicadas y retiradas son de solo lectura. Todo ajuste o corrección crea una nueva versión. Los aprendices que ya completaron esta lección conservan la versión exacta que cursaron.</p>
+
+        <div style="margin: 1.5rem 0;">
+            <form th:action="@{/gestor/lecciones/{id}/versiones/nueva(id=${leccion.id})}" method="post" style="display: inline;">
+                <button type="submit" class="boton-principal">+ Crear Nueva Versión en Borrador</button>
+            </form>
+        </div>
+
+        <section aria-labelledby="seccion-historial">
+            <h2 id="seccion-historial">Historial Completo de Versiones</h2>
+
+            <div class="tabla-contenedor">
+                <table class="tabla-accesible">
+                    <caption>Historial de versiones registradas para la lección: <span th:text="${leccion.titulo}">Lección</span></caption>
+                    <thead>
+                        <tr>
+                            <th scope="col" style="width: 12%;">Versión</th>
+                            <th scope="col" style="width: 18%;">Estado</th>
+                            <th scope="col" style="width: 25%;">Trazabilidad</th>
+                            <th scope="col" style="width: 45%;">Detalle y Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="v : ${versiones}">
+                            <td>
+                                <strong th:text="'Versión ' + ${v.numeroVersion}">v1</strong>
+                                <div th:if="${v.versionOrigen != null}" style="font-size: 0.85rem; color: var(--color-texto-secundario);">
+                                    Origen: v<span th:text="${v.versionOrigen.numeroVersion}">0</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span th:text="${v.estado.name()}"
+                                      th:class="'etiqueta-estado ' + (${v.estado.name() == 'PUBLICADA' ? 'estado-publicada' : (v.estado.name() == 'EN_REVISION' ? 'estado-en-revision' : (v.estado.name() == 'RECHAZADA' ? 'estado-rechazada' : (v.estado.name() == 'RETIRADA' ? 'estado-retirada' : 'estado-borrador')))})">
+                                    BORRADOR
+                                </span>
+                            </td>
+                            <td>
+                                <div>
+                                    <strong>Creado:</strong> 
+                                    <span th:text="${#temporals.format(v.creadoEn, 'dd/MM/yyyy HH:mm')}">Fecha</span>
+                                </div>
+                                <div th:if="${v.creadoPor != null}">
+                                    <strong>Por:</strong> <span th:text="${v.creadoPor.nombreCompleto}">Autor</span>
+                                </div>
+                                <div th:if="${v.enviadaARevisionEn != null}">
+                                    <strong>Enviada:</strong> <span th:text="${#temporals.format(v.enviadaARevisionEn, 'dd/MM/yyyy HH:mm')}">Fecha</span>
+                                </div>
+                                <div th:if="${v.publicadaEn != null}">
+                                    <strong>Publicada:</strong> <span th:text="${#temporals.format(v.publicadaEn, 'dd/MM/yyyy HH:mm')}">Fecha</span>
+                                </div>
+                            </td>
+                            <td>
+                                <!-- Detalle según el estado -->
+                                <div th:if="${v.estado.name() == 'BORRADOR'}" style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+                                    <a th:href="@{/gestor/versiones/{id}/editar(id=${v.id})}" class="boton-principal" style="min-height: 38px; padding: 0.35rem 0.75rem; font-size: 0.95rem;">
+                                        Editar Borrador
+                                    </a>
+                                    <form th:action="@{/gestor/versiones/{id}/enviar-revision(id=${v.id})}" method="post" style="display: inline;">
+                                        <button type="submit" class="boton-secundario" style="min-height: 38px; padding: 0.35rem 0.75rem; font-size: 0.95rem;">
+                                            Enviar a Revisión
+                                        </button>
+                                    </form>
+                                    <div style="font-size: 0.9rem; margin-top: 0.25rem;">
+                                        <span th:if="${v.tieneAudioYTranscripcion()}" style="color: var(--color-exito-texto); font-weight: bold;">
+                                            ✓ Audio y transcripción listos
+                                        </span>
+                                        <span th:unless="${v.tieneAudioYTranscripcion()}" style="color: var(--color-error-texto); font-weight: bold;">
+                                            ⚠️ Falta audio o transcripción
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div th:if="${v.estado.name() == 'EN_REVISION'}">
+                                    <p style="margin: 0; font-style: italic;">En espera de auditoría por el equipo de accesibilidad.</p>
+                                </div>
+
+                                <div th:if="${v.estado.name() == 'RECHAZADA'}">
+                                    <div class="alerta alerta-error" style="padding: 0.5rem 0.75rem; margin-bottom: 0.5rem;" role="alert">
+                                        <strong>Motivo de rechazo:</strong>
+                                        <div th:text="${v.motivoRechazo}">Detalle del motivo...</div>
+                                    </div>
+                                    <form th:action="@{/gestor/versiones/{id}/corregir(id=${v.id})}" method="post">
+                                        <button type="submit" class="boton-principal" style="min-height: 38px; padding: 0.35rem 0.75rem; font-size: 0.95rem;">
+                                            Subsanar (Crear borrador desde esta)
+                                        </button>
+                                    </form>
+                                </div>
+
+                                <div th:if="${v.estado.name() == 'PUBLICADA'}">
+                                    <p style="margin: 0; font-weight: bold; color: var(--color-exito-texto);">
+                                        Versión vigente consumida por nuevos aprendices.
+                                    </p>
+                                </div>
+
+                                <div th:if="${v.estado.name() == 'RETIRADA'}">
+                                    <p style="margin: 0; color: var(--color-texto-secundario);">
+                                        Versión histórica retirada. Preservada para estudiantes que la cursaron.
+                                    </p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+</body>
+</html>
