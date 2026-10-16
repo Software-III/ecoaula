@@ -20,11 +20,14 @@ public class EvaluacionController {
 
     private final EvaluacionService evaluacionService;
     private final MatriculaService matriculaService;
+    private final com.ecoaula.repository.CertificadoRepository certificadoRepository;
 
     public EvaluacionController(EvaluacionService evaluacionService,
-                                MatriculaService matriculaService) {
+                                MatriculaService matriculaService,
+                                com.ecoaula.repository.CertificadoRepository certificadoRepository) {
         this.evaluacionService = evaluacionService;
         this.matriculaService = matriculaService;
+        this.certificadoRepository = certificadoRepository;
     }
 
     @GetMapping("/matriculas/{id}/evaluacion")
@@ -37,8 +40,12 @@ public class EvaluacionController {
 
         // Si ya está calificado, redirigir según aprobación
         if (intento.getEstado() == EstadoIntento.CALIFICADO) {
-            if (Boolean.TRUE.equals(intento.getAprobado()) && matricula.getCertificado() != null) {
-                return "redirect:/certificados/" + matricula.getCertificado().getId();
+            if (Boolean.TRUE.equals(intento.getAprobado())) {
+                Long certId = matricula.getCertificado() != null ? matricula.getCertificado().getId()
+                        : certificadoRepository.findByMatriculaId(matriculaId).map(Certificado::getId).orElse(null);
+                if (certId != null) {
+                    return "redirect:/certificados/" + certId;
+                }
             }
             return "redirect:/matriculas/" + matriculaId + "/evaluacion/resultado?intentoId=" + intento.getId();
         }
@@ -82,7 +89,9 @@ public class EvaluacionController {
             IntentoEvaluacion calificado = evaluacionService.calificarIntento(intentoId);
             if (Boolean.TRUE.equals(calificado.getAprobado())) {
                 Matricula matricula = matriculaService.obtenerPorIdYValidarPropiedad(matriculaId, principal.getName());
-                return "redirect:/certificados/" + matricula.getCertificado().getId();
+                Long certId = matricula.getCertificado() != null ? matricula.getCertificado().getId()
+                        : certificadoRepository.findByMatriculaId(matriculaId).map(Certificado::getId).orElse(null);
+                return "redirect:/certificados/" + certId;
             } else {
                 return "redirect:/matriculas/" + matriculaId + "/evaluacion/resultado?intentoId=" + intentoId;
             }

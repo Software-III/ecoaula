@@ -52,6 +52,7 @@ public class CertificacionService {
         Certificado certificado = new Certificado(matricula, codigo);
         Certificado guardado = certificadoRepository.save(certificado);
 
+        matricula.setCertificado(guardado);
         matricula.setEstado(EstadoMatricula.COMPLETADA);
         matriculaRepository.save(matricula);
 
