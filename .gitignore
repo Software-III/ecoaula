@@ -36,3 +36,5 @@ Thumbs.db
 # Almacenamiento local de archivos temporales (solo en la raíz)
 /storage/
 /temp-audio/
+/backups/
+
