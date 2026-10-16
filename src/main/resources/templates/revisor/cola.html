@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cola de Revisión Técnica de Accesibilidad — EcoAula</title>
+    <link rel="stylesheet" th:href="@{/css/ecoaula.css}">
+</head>
+<body th:class="${(perfilAccesibilidad != null and perfilAccesibilidad.modoVisual != null and perfilAccesibilidad.modoVisual.name() == 'ALTO_CONTRASTE' ? 'modo-alto-contraste ' : '') + (perfilAccesibilidad != null and perfilAccesibilidad.tamanoTexto != null and perfilAccesibilidad.tamanoTexto.name() == 'GRANDE' ? 'texto-grande ' : '') + (perfilAccesibilidad != null and perfilAccesibilidad.soloAudio ? 'solo-audio ' : '')}">
+
+    <a href="#contenido-principal" class="skip-link">Saltar al contenido principal</a>
+
+    <header class="encabezado-sitio" role="banner">
+        <div class="contenedor-principal">
+            <div style="font-size: 1.5rem; font-weight: bold;">
+                <a th:href="@{/revisor/cola}" style="text-decoration: none; color: inherit;">EcoAula — Portal del Revisor</a>
+            </div>
+            <nav class="navegacion-principal" role="navigation" aria-label="Navegación principal">
+                <ul>
+                    <li><a th:href="@{/revisor/cola}" aria-current="page">Cola de Revisión</a></li>
+                    <li><a th:href="@{/revisor/indicadores}">Indicadores de Calidad</a></li>
+                    <li><a th:href="@{/perfil}">Mi Perfil</a></li>
+                    <li>
+                        <form th:action="@{/logout}" method="post" style="display: inline;">
+                            <button type="submit" class="boton-secundario" style="min-height: 38px; padding: 0.25rem 0.75rem; font-size: 1rem;">Cerrar Sesión</button>
+                        </form>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main id="contenido-principal" class="contenedor-principal" role="main" tabindex="-1">
+        <h1>Cola de Revisión Técnica de Accesibilidad</h1>
+
+        <!-- Mensajes de estado -->
+        <div th:if="${mensajeExito != null}" class="alerta alerta-exito" role="status" aria-live="polite" th:text="${mensajeExito}"></div>
+        <div th:if="${mensajeError != null}" class="alerta alerta-error" role="alert" th:text="${mensajeError}"></div>
+
+        <p>Bienvenido al panel de auditoría. Aquí se listan las versiones de lecciones enviadas por los gestores que requieren verificación técnica de conformidad con WCAG 2.1 AA y NTC 5854 antes de su publicación oficial.</p>
+
+        <div style="margin: 1.5rem 0;">
+            <a th:href="@{/revisor/indicadores}" class="boton-secundario">📊 Consultar Indicadores de Calidad</a>
+        </div>
+
+        <section aria-labelledby="seccion-cola">
+            <h2 id="seccion-cola">Versiones en Espera de Revisión (<span th:text="${cola.size()}">0</span>)</h2>
+
+            <div th:if="${cola.empty}" class="alerta alerta-exito" role="status">
+                <strong>No hay versiones pendientes:</strong> La cola de revisión técnica se encuentra al día.
+            </div>
+
+            <div class="tabla-contenedor" th:unless="${cola.empty}">
+                <table class="tabla-accesible">
+                    <caption>Versiones pendientes de auditoría técnica, ordenadas por antigüedad (más antiguas primero)</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col" style="width: 35%;">Curso y Lección</th>
+                            <th scope="col" style="width: 15%;">Versión</th>
+                            <th scope="col" style="width: 25%;">Gestor y Fecha de Envío</th>
+                            <th scope="col" style="width: 25%;">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="v : ${cola}">
+                            <td>
+                                <strong th:text="${v.contenido.titulo}">Título de la lección</strong>
+                                <div style="font-size: 0.9rem; color: var(--color-texto-secundario);" th:text="${v.contenido.curso.titulo}">
+                                    Curso
+                                </div>
+                            </td>
+                            <td>
+                                <span th:text="'Versión ' + ${v.numeroVersion}">v1</span>
+                                <div th:if="${v.versionOrigen != null}" style="font-size: 0.85rem; color: var(--color-texto-secundario);">
+                                    (Subsanación de v<span th:text="${v.versionOrigen.numeroVersion}">0</span>)
+                                </div>
+                            </td>
+                            <td>
+                                <div th:if="${v.creadoPor != null}">
+                                    <strong th:text="${v.creadoPor.nombreCompleto}">Nombre Gestor</strong>
+                                </div>
+                                <div style="font-size: 0.9rem;">
+                                    Enviada: <span th:text="${v.enviadaARevisionEn != null ? #temporals.format(v.enviadaARevisionEn, 'dd/MM/yyyy HH:mm') : #temporals.format(v.creadoEn, 'dd/MM/yyyy HH:mm')}">Fecha</span>
+                                </div>
+                            </td>
+                            <td>
+                                <a th:href="@{/revisor/versiones/{id}/revisar(id=${v.id})}" class="boton-principal" style="min-height: 40px; padding: 0.4rem 0.9rem; font-size: 1rem;">
+                                    Auditar y Calificar
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+</body>
+</html>

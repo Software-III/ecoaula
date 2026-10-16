@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${titulo != null ? titulo : 'Auditar Accesibilidad — EcoAula'}">Auditar Accesibilidad — EcoAula</title>
+    <link rel="stylesheet" th:href="@{/css/ecoaula.css}">
+</head>
+<body th:class="${(perfilAccesibilidad != null and perfilAccesibilidad.modoVisual != null and perfilAccesibilidad.modoVisual.name() == 'ALTO_CONTRASTE' ? 'modo-alto-contraste ' : '') + (perfilAccesibilidad != null and perfilAccesibilidad.tamanoTexto != null and perfilAccesibilidad.tamanoTexto.name() == 'GRANDE' ? 'texto-grande ' : '') + (perfilAccesibilidad != null and perfilAccesibilidad.soloAudio ? 'solo-audio ' : '')}">
+
+    <a href="#contenido-principal" class="skip-link">Saltar al contenido principal</a>
+
+    <header class="encabezado-sitio" role="banner">
+        <div class="contenedor-principal">
+            <div style="font-size: 1.5rem; font-weight: bold;">
+                <a th:href="@{/revisor/cola}" style="text-decoration: none; color: inherit;">EcoAula — Portal del Revisor</a>
+            </div>
+            <nav class="navegacion-principal" role="navigation" aria-label="Navegación principal">
+                <ul>
+                    <li><a th:href="@{/revisor/cola}">Cola de Revisión</a></li>
+                    <li><a th:href="@{/revisor/indicadores}">Indicadores de Calidad</a></li>
+                    <li><a th:href="@{/perfil}">Mi Perfil</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main id="contenido-principal" class="contenedor-principal" role="main" tabindex="-1">
+        <nav aria-label="Miga de pan" style="margin-bottom: 1rem;">
+            <a th:href="@{/revisor/cola}">← Volver a la cola de revisión</a>
+        </nav>
+
+        <h1 th:text="'Auditar Accesibilidad: Versión ' + ${version.numeroVersion} + ' (' + ${version.contenido.titulo} + ')'">Auditar Accesibilidad</h1>
+
+        <!-- Mensajes de estado -->
+        <div th:if="${mensajeExito != null}" class="alerta alerta-exito" role="status" aria-live="polite" th:text="${mensajeExito}"></div>
+        <div th:if="${mensajeError != null}" class="alerta alerta-error" role="alert" th:text="${mensajeError}"></div>
+
+        <section aria-labelledby="seccion-metadatos" style="margin-bottom: 1.5rem;">
+            <h2 id="seccion-metadatos" style="font-size: 1.25rem;">Información de la Lección</h2>
+            <p>
+                <strong>Curso:</strong> <span th:text="${version.contenido.curso.titulo}">Curso</span><br>
+                <strong>Lección:</strong> <span th:text="${version.contenido.orden} + '. ' + ${version.contenido.titulo}">Lección</span><br>
+                <strong>Autor / Gestor:</strong> <span th:text="${version.creadoPor != null ? version.creadoPor.nombreCompleto : 'Gestor de Contenido'}">Autor</span><br>
+                <strong>Fecha de creación:</strong> <span th:text="${#temporals.format(version.creadoEn, 'dd/MM/yyyy HH:mm')}">Fecha</span>
+            </p>
+        </section>
+
+        <!-- 1. Reproducción de Audio Nativo -->
+        <section aria-labelledby="seccion-audio" class="seccion-audio">
+            <h2 id="seccion-audio" style="font-size: 1.3rem;">1. Recurso de Audio Nativo</h2>
+            <div th:if="${version.rutaAudio != null and !version.rutaAudio.isBlank()}">
+                <audio controls th:src="@{/audio/{archivo}(archivo=${version.rutaAudio})}" preload="metadata">
+                    Su navegador no soporta el elemento nativo de reproducción de audio.
+                </audio>
+                <p style="font-size: 0.95rem; color: var(--color-texto-secundario);">
+                    Archivo persistido: <code th:text="${version.rutaAudio}">audio.wav</code>
+                </p>
+            </div>
+            <div th:unless="${version.rutaAudio != null and !version.rutaAudio.isBlank()}" class="alerta alerta-error" role="alert">
+                Esta versión no cuenta con archivo de audio asociado.
+            </div>
+        </section>
+
+        <!-- 2. Transcripción Completa -->
+        <section aria-labelledby="seccion-transcripcion" style="margin-top: 2rem;">
+            <h2 id="seccion-transcripcion" style="font-size: 1.3rem;">2. Transcripción Textual Completa</h2>
+            <div class="transcripcion-caja">
+                <pre class="transcripcion-texto" th:text="${version.transcripcion}">Transcripción de la lección...</pre>
+            </div>
+        </section>
+
+        <!-- 3. Formulario de Evaluación de Accesibilidad (Lista de Chequeo y Acciones) -->
+        <section aria-labelledby="seccion-chequeo" style="margin-top: 2.5rem; border-top: 2px solid var(--color-borde); padding-top: 1.5rem;">
+            <h2 id="seccion-chequeo">3. Lista de Chequeo de Accesibilidad (WCAG 2.1 AA / NTC 5854)</h2>
+            <p>Marque cada casilla únicamente tras corroborar que el contenido de audio y transcripción cumple plenamente con el criterio correspondiente. Para publicar la versión, todos los criterios deben estar conformes.</p>
+
+            <!-- Formulario principal con los criterios -->
+            <form id="form-revision" th:action="@{/revisor/versiones/{id}/aprobar(id=${version.id})}" method="post">
+                <fieldset>
+                    <legend>Criterios Técnicos y Pedagógicos Requeridos</legend>
+                    <div th:each="criterio : ${criterios}" class="item-criterio">
+                        <div class="opcion-seleccion">
+                            <input type="checkbox" th:id="${'crit_' + criterio.codigo}" name="criterios" th:value="${criterio.codigo}">
+                            <label th:for="${'crit_' + criterio.codigo}">
+                                <strong th:text="${criterio.descripcion}">Descripción del criterio</strong>
+                                <div class="item-criterio-referencia" th:text="${criterio.normaReferencia}">Norma WCAG</div>
+                            </label>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <!-- Bloque de Aprobación -->
+                <div style="margin: 2rem 0; padding: 1.5rem; border: 2px solid var(--color-exito-borde); border-radius: 6px; background-color: var(--color-fondo-panel);">
+                    <h3 style="margin-top: 0; color: var(--color-exito-texto);">Acción 1: Aprobar y Publicar Lección</h3>
+                    <p>Al aprobar, esta versión pasará de inmediato al estado <strong>PUBLICADA</strong> y los aprendices matriculados accederán a ella. Si existía una versión anterior publicada, pasará automáticamente a <strong>RETIRADA</strong> (ADR-08).</p>
+                    <button type="submit" class="boton-principal" style="background-color: var(--color-primario);">
+                        ✓ Aprobar y Publicar Oficialmente
+                    </button>
+                </div>
+            </form>
+
+            <!-- Formulario de Rechazo -->
+            <div style="margin: 2rem 0; padding: 1.5rem; border: 2px solid var(--color-error-borde); border-radius: 6px; background-color: var(--color-fondo-panel);">
+                <h3 style="margin-top: 0; color: var(--color-error-texto);">Acción 2: Rechazar Versión y Solicitar Subsanación</h3>
+                <p>Si la versión no cumple uno o más criterios de accesibilidad, rechácela indicando claramente el motivo de las no conformidades. El gestor recibirá estas observaciones para corregir el contenido creando un nuevo borrador.</p>
+
+                <form th:action="@{/revisor/versiones/{id}/rechazar(id=${version.id})}" method="post" novalidate>
+                    <div class="grupo-campo">
+                        <label for="motivoRechazo">Motivo detallado de rechazo (obligatorio) *</label>
+                        <div class="ayuda-campo" id="ayuda-motivo">
+                            Describa las fallas encontradas (por ejemplo: omisión de información en la transcripción, volumen bajo, referencias solo visuales, etc.).
+                        </div>
+                        <textarea id="motivoRechazo" name="motivo" rows="5" required aria-describedby="ayuda-motivo" placeholder="Especifique con precisión las no conformidades detectadas..."></textarea>
+                    </div>
+
+                    <button type="submit" class="boton-secundario" style="border-color: var(--color-error-borde); color: var(--color-error-texto);">
+                        ✕ Rechazar Versión con este Motivo
+                    </button>
+                </form>
+            </div>
+        </section>
+    </main>
+
+</body>
+</html>

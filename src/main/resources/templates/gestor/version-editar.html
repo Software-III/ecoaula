@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${titulo != null ? titulo : 'Editar Borrador — EcoAula'}">Editar Borrador — EcoAula</title>
+    <link rel="stylesheet" th:href="@{/css/ecoaula.css}">
+</head>
+<body th:class="${(perfilAccesibilidad != null and perfilAccesibilidad.modoVisual != null and perfilAccesibilidad.modoVisual.name() == 'ALTO_CONTRASTE' ? 'modo-alto-contraste ' : '') + (perfilAccesibilidad != null and perfilAccesibilidad.tamanoTexto != null and perfilAccesibilidad.tamanoTexto.name() == 'GRANDE' ? 'texto-grande ' : '') + (perfilAccesibilidad != null and perfilAccesibilidad.soloAudio ? 'solo-audio ' : '')}">
+
+    <a href="#contenido-principal" class="skip-link">Saltar al contenido principal</a>
+
+    <header class="encabezado-sitio" role="banner">
+        <div class="contenedor-principal">
+            <div style="font-size: 1.5rem; font-weight: bold;">
+                <a th:href="@{/gestor/cursos}" style="text-decoration: none; color: inherit;">EcoAula — Portal del Gestor</a>
+            </div>
+            <nav class="navegacion-principal" role="navigation" aria-label="Navegación principal">
+                <ul>
+                    <li><a th:href="@{/gestor/cursos}">Mis Cursos y Contenidos</a></li>
+                    <li><a th:href="@{/perfil}">Mi Perfil</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main id="contenido-principal" class="contenedor-principal" role="main" tabindex="-1">
+        <nav aria-label="Miga de pan" style="margin-bottom: 1rem;">
+            <a th:href="@{/gestor/lecciones/{id}/versiones(id=${version.contenido.id})}">← Volver al historial de versiones</a>
+        </nav>
+
+        <h1 th:text="'Editar Borrador: Versión ' + ${version.numeroVersion} + ' (' + ${version.contenido.titulo} + ')'">Editar Borrador</h1>
+
+        <!-- Mensajes de estado -->
+        <div th:if="${mensajeExito != null}" class="alerta alerta-exito" role="status" aria-live="polite" th:text="${mensajeExito}"></div>
+        <div th:if="${mensajeError != null}" class="alerta alerta-error" role="alert" th:text="${mensajeError}"></div>
+
+        <p><strong>Requisitos de accesibilidad para publicación (ADR-08 / WCAG 2.1 AA):</strong> Toda lección debe contar obligatoriamente con el archivo de audio nativo y la transcripción textual completa antes de poder enviarse a revisión.</p>
+
+        <!-- Vista previa del audio nativo si ya fue subido -->
+        <section aria-labelledby="seccion-audio-actual" class="seccion-audio" th:if="${version.rutaAudio != null and !version.rutaAudio.isBlank()}">
+            <h2 id="seccion-audio-actual" style="font-size: 1.25rem;">Vista Previa del Audio Cargado</h2>
+            <audio controls th:src="@{/audio/{archivo}(archivo=${version.rutaAudio})}" preload="metadata">
+                Su navegador no soporta el elemento nativo de reproducción de audio.
+            </audio>
+            <p style="font-size: 0.95rem; color: var(--color-texto-secundario);">
+                Archivo persistido: <code th:text="${version.rutaAudio}">audio.wav</code>
+            </p>
+        </section>
+
+        <form th:action="@{/gestor/versiones/{id}/editar(id=${version.id})}"
+              th:object="${borradorForm}"
+              method="post"
+              enctype="multipart/form-data"
+              novalidate>
+
+            <div class="grupo-campo">
+                <label for="archivoAudio">Subir nuevo archivo de audio nativo</label>
+                <div class="ayuda-campo" id="ayuda-audio">
+                    Formatos permitidos: <strong>MP3, WAV, OGG</strong>. Tamaño máximo: <strong>15 MB</strong>. Si ya tiene un audio cargado y no selecciona un archivo nuevo, se conservará el audio existente.
+                </div>
+                <input type="file" id="archivoAudio" name="archivoAudio" accept=".mp3,.wav,.ogg,audio/*" aria-describedby="ayuda-audio">
+            </div>
+
+            <div class="grupo-campo">
+                <label for="transcripcion">Transcripción completa del audio *</label>
+                <div class="ayuda-campo" id="ayuda-transcripcion">
+                    Redacte o pegue la transcripción textual íntegra. Utilice párrafos separados, encabezados claros y descripción explícita de cualquier concepto sonoro para garantizar autonomía a aprendices con ceguera o baja visión.
+                </div>
+                <textarea id="transcripcion" th:field="*{transcripcion}" rows="12" required aria-describedby="ayuda-transcripcion"></textarea>
+            </div>
+
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1.5rem; align-items: center;">
+                <button type="submit" class="boton-principal">Guardar Cambios del Borrador</button>
+                <a th:href="@{/gestor/lecciones/{id}/versiones(id=${version.contenido.id})}" class="boton-secundario">Regresar al Historial</a>
+            </div>
+        </form>
+
+        <!-- Bloque independiente para Enviar a Revisión cuando cumple los requisitos -->
+        <section aria-labelledby="seccion-envio-revision" style="margin-top: 3rem; border-top: 2px solid var(--color-borde); padding-top: 1.5rem;">
+            <h2 id="seccion-envio-revision" style="font-size: 1.3rem;">Finalizar y Enviar a Revisión Técnica</h2>
+
+            <div th:if="${version.tieneAudioYTranscripcion()}" class="alerta alerta-exito" role="status">
+                <strong>✓ Requisitos mínimos completos:</strong> La versión cuenta con audio cargado y transcripción. Puede enviarla a revisión técnica de accesibilidad.
+            </div>
+
+            <div th:unless="${version.tieneAudioYTranscripcion()}" class="alerta alerta-error" role="status">
+                <strong>Pendiente:</strong> Debe subir un archivo de audio y guardar la transcripción antes de poder habilitar el envío a revisión técnica.
+            </div>
+
+            <form th:if="${version.tieneAudioYTranscripcion()}" th:action="@{/gestor/versiones/{id}/enviar-revision(id=${version.id})}" method="post">
+                <button type="submit" class="boton-principal" style="background-color: var(--color-primario);">
+                    ✓ Enviar esta versión a Revisión Técnica
+                </button>
+            </form>
+        </section>
+    </main>
+
+</body>
+</html>

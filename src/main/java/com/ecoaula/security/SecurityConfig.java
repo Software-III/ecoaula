@@ -11,16 +11,20 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 /**
  * Configuración centralizada de seguridad para EcoAula (ADR-09).
- * Establece rutas públicas, formulario de login accesible, protección de sesión y rate limiting.
+ * Establece rutas públicas, formulario de login accesible, protección de sesión,
+ * autorización estricta por roles (/gestor/**, /revisor/**) y rate limiting.
  */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
     private final RateLimitingFilter rateLimitingFilter;
+    private final EcoAulaAuthenticationSuccessHandler authenticationSuccessHandler;
 
-    public SecurityConfig(RateLimitingFilter rateLimitingFilter) {
+    public SecurityConfig(RateLimitingFilter rateLimitingFilter,
+                          EcoAulaAuthenticationSuccessHandler authenticationSuccessHandler) {
         this.rateLimitingFilter = rateLimitingFilter;
+        this.authenticationSuccessHandler = authenticationSuccessHandler;
     }
 
     @Bean
@@ -43,6 +47,8 @@ public class SecurityConfig {
                     "/error",
                     "/h2-console/**"
                 ).permitAll()
+                .requestMatchers("/gestor/**").hasRole("GESTOR_CONTENIDO")
+                .requestMatchers("/revisor/**").hasRole("REVISOR_ACCESIBILIDAD")
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form
@@ -50,7 +56,7 @@ public class SecurityConfig {
                 .loginProcessingUrl("/login")
                 .usernameParameter("correo")
                 .passwordParameter("password")
-                .defaultSuccessUrl("/cursos", true)
+                .successHandler(authenticationSuccessHandler)
                 .failureUrl("/login?error=true")
                 .permitAll()
             )

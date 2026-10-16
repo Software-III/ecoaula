@@ -86,6 +86,30 @@ public class DataInitializer implements CommandLineRunner {
         aprendizRepository.save(demo);
         log.info("Aprendiz de prueba creado: {} / EcoAula2026!", demo.getCorreo());
 
+        // 1.1 Crear Gestor de Contenido de Demostración
+        Aprendiz gestor = new Aprendiz();
+        gestor.setNombreCompleto("Gestor de Contenido Demo");
+        gestor.setCorreo("gestor@ecoaula.local");
+        gestor.setTelefono("3009876543");
+        gestor.setPasswordHash(passwordEncoder.encode("GestorEcoAula2026!"));
+        gestor.setRol(Rol.GESTOR_CONTENIDO);
+        gestor.setConsentimientoDatos(true);
+        gestor.setFechaConsentimiento(LocalDateTime.now());
+        gestor = aprendizRepository.save(gestor);
+        log.info("Gestor de contenido creado: {} / GestorEcoAula2026!", gestor.getCorreo());
+
+        // 1.2 Crear Revisor de Accesibilidad de Demostración
+        Aprendiz revisor = new Aprendiz();
+        revisor.setNombreCompleto("Revisor de Accesibilidad Demo");
+        revisor.setCorreo("revisor@ecoaula.local");
+        revisor.setTelefono("3005551234");
+        revisor.setPasswordHash(passwordEncoder.encode("RevisorEcoAula2026!"));
+        revisor.setRol(Rol.REVISOR_ACCESIBILIDAD);
+        revisor.setConsentimientoDatos(true);
+        revisor.setFechaConsentimiento(LocalDateTime.now());
+        aprendizRepository.save(revisor);
+        log.info("Revisor de accesibilidad creado: {} / RevisorEcoAula2026!", revisor.getCorreo());
+
         // 2. Generar archivo de audio base para demostraciones
         byte[] audioWav = AudioDemoGenerator.generarTonoSuaveWav(6, 440.0);
         String rutaAudio1 = almacenamientoContenido.guardarAudio("leccion_demo_ofimatica_1.wav", audioWav);
@@ -108,19 +132,19 @@ public class DataInitializer implements CommandLineRunner {
                 "En esta sesión aprenderemos a operar procesadores de texto utilizando exclusivamente el teclado.\n" +
                 "La tecla Tabulador nos permite desplazarnos entre opciones interactivas, mientras que Shift + Tab retrocede.\n" +
                 "Para navegar por párrafos, utilizamos las flechas direccionales combinadas con la tecla Control.\n" +
-                "Recuerde que no se requiere el uso de ratón para dar formato accesible a un documento.");
+                "Recuerde que no se requiere el uso de ratón para dar formato accesible a un documento.", gestor);
 
         crearLeccion(c1, 2, "Estructura jerárquica con encabezados semánticos", rutaAudio2,
                 "Transcripción de la Lección 2:\n\n" +
                 "En esta lección abordamos la importancia de los encabezados semánticos de nivel H1, H2 y H3.\n" +
                 "Un lector de pantalla utiliza los encabezados como mapa de orientación rápido para saltar de sección en sección.\n" +
-                "Nunca utilice simplemente texto en negrita o tamaño grande para simular un título; siempre asigne el estilo de encabezado correspondiente.");
+                "Nunca utilice simplemente texto en negrita o tamaño grande para simular un título; siempre asigne el estilo de encabezado correspondiente.", gestor);
 
         crearLeccion(c1, 3, "Texto alternativo en imágenes y exportación a PDF", rutaAudio3,
                 "Transcripción de la Lección 3:\n\n" +
                 "Para finalizar el curso, analizamos el texto alternativo en imágenes.\n" +
                 "Toda imagen con valor informativo debe contar con una descripción concisa que transmita su mensaje a un usuario ciego.\n" +
-                "Al exportar a PDF, asegúrese de marcar la opción 'Documento etiquetado para accesibilidad'.");
+                "Al exportar a PDF, asegúrese de marcar la opción 'Documento etiquetado para accesibilidad'.", gestor);
 
         crearEvaluacionOfimatica(c1);
 
@@ -134,11 +158,25 @@ public class DataInitializer implements CommandLineRunner {
         );
         c2 = cursoRepository.save(c2);
         crearLeccion(c2, 1, "Principios del trato respetuoso y lenguaje inclusivo", rutaAudio1,
-                "Transcripción: Pautas fundamentales para la comunicación clara y directa, dirigiéndose siempre a la persona y no a su acompañante.");
+                "Transcripción: Pautas fundamentales para la comunicación clara y directa, dirigiéndose siempre a la persona y no a su acompañante.", gestor);
         crearLeccion(c2, 2, "Pautas de orientación y acompañamiento físico", rutaAudio2,
-                "Transcripción: Cómo ofrecer asistencia física adecuadamente mediante la técnica de guía vidente, permitiendo que la persona tome el brazo del guía.");
+                "Transcripción: Cómo ofrecer asistencia física adecuadamente mediante la técnica de guía vidente, permitiendo que la persona tome el brazo del guía.", gestor);
         crearLeccion(c2, 3, "Servicio y trámites digitales accesibles", rutaAudio3,
-                "Transcripción: Garantizar que los formularios y canales virtuales de atención cumplan con la norma técnica colombiana NTC 5854.");
+                "Transcripción: Garantizar que los formularios y canales virtuales de atención cumplan con la norma técnica colombiana NTC 5854.", gestor);
+
+        // Lección de demostración en estado EN_REVISION para probar la cola del revisor de inmediato
+        Contenido cEnRevision = new Contenido("Atención telefónica y mensajería accesible", 4, c2);
+        cEnRevision = contenidoRepository.save(cEnRevision);
+        ContenidoVersion vRevision = new ContenidoVersion(cEnRevision, 1, EstadoContenido.EN_REVISION, rutaAudio1,
+                "Transcripción de la lección en revisión:\n\n" +
+                "En esta lección se detallan los protocolos para atender llamadas y enviar mensajes claros a usuarios con baja visión o ceguera.\n" +
+                "Se destaca evitar abreviaturas ambiguas o emojis excesivos que dificulten la lectura de los sintetizadores de voz.",
+                null);
+        vRevision.setCreadoPor(gestor);
+        vRevision.setCreadoEn(LocalDateTime.now().minusHours(3));
+        vRevision.setEnviadaARevisionEn(LocalDateTime.now().minusHours(2));
+        versionRepository.save(vRevision);
+
         crearEvaluacionServicio(c2);
 
         // 5. Curso 3: Principios de Finanzas Personales
@@ -151,21 +189,23 @@ public class DataInitializer implements CommandLineRunner {
         );
         c3 = cursoRepository.save(c3);
         crearLeccion(c3, 1, "Elaboración de presupuestos mensuales", rutaAudio1,
-                "Transcripción: Estructuración de ingresos y egresos fijos mediante tablas accesibles.");
+                "Transcripción: Estructuración de ingresos y egresos fijos mediante tablas accesibles.", gestor);
         crearLeccion(c3, 2, "Metas de ahorro y fondo de emergencias", rutaAudio2,
-                "Transcripción: Importancia de apartar un porcentaje mensual antes de gastos variables.");
+                "Transcripción: Importancia de apartar un porcentaje mensual antes de gastos variables.", gestor);
         crearLeccion(c3, 3, "Banca digital accesible y seguridad financiera", rutaAudio3,
-                "Transcripción: Recomendaciones de seguridad y uso de lectores de pantalla en portales bancarios.");
+                "Transcripción: Recomendaciones de seguridad y uso de lectores de pantalla en portales bancarios.", gestor);
         crearEvaluacionFinanzas(c3);
 
         log.info("Datos de demostración inicializados con éxito.");
     }
 
-    private void crearLeccion(Curso curso, int orden, String titulo, String rutaAudio, String transcripcion) {
+    private void crearLeccion(Curso curso, int orden, String titulo, String rutaAudio, String transcripcion, Aprendiz autor) {
         Contenido c = new Contenido(titulo, orden, curso);
         c = contenidoRepository.save(c);
 
         ContenidoVersion v = new ContenidoVersion(c, 1, EstadoContenido.PUBLICADA, rutaAudio, transcripcion, LocalDateTime.now());
+        v.setCreadoPor(autor);
+        v.setCreadoEn(LocalDateTime.now().minusDays(1));
         versionRepository.save(v);
     }
 
