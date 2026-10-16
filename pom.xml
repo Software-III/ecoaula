@@ -95,6 +95,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
+                    <argLine>@{argLine} -XX:+EnableDynamicAgentLoading -Dnet.bytebuddy.experimental=true</argLine>
                     <excludes>
                         <exclude>**/FlujoCompletoMySQLIntegrationTest.java</exclude>
                     </excludes>
@@ -132,6 +133,7 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
+                            <argLine>@{argLine} -XX:+EnableDynamicAgentLoading -Dnet.bytebuddy.experimental=true</argLine>
                             <excludes combine.self="override">
                             </excludes>
                         </configuration>
