@@ -17,7 +17,7 @@ echo "[$(date)] Iniciando respaldo de EcoAula..."
 # 1. Respaldo de MySQL
 DB_BACKUP_FILE="${BACKUP_DIR}/db_backup_${TIMESTAMP}.sql.gz"
 echo "  -> Generando volcado de base de datos..."
-docker exec "${DB_CONTAINER}" mysqldump -u "${DB_USER}" -p"${DB_PASS}" "${DB_NAME}" | gzip > "${DB_BACKUP_FILE}"
+docker exec "${DB_CONTAINER}" mysqldump --no-tablespaces -u "${DB_USER}" -p"${DB_PASS}" "${DB_NAME}" | gzip > "${DB_BACKUP_FILE}"
 chmod 600 "${DB_BACKUP_FILE}"
 echo "     Volcado guardado en: ${DB_BACKUP_FILE}"
 
