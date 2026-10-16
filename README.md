@@ -62,18 +62,18 @@ La aplicación quedará disponible en: **`http://localhost:8080`**
 
 ---
 
-## 👤 Usuario de Demostración (Seed Data)
+## 👤 Usuarios de Demostración (Seed Data)
 
-La plataforma inicializa automáticamente datos de prueba con propósitos exclusivamente demostrativos:
+La plataforma inicializa automáticamente cuentas de prueba con propósitos demostrativos:
 
-| Campo | Valor |
-|---|---|
-| **Correo electrónico** | `aprendiz@ecoaula.local` |
-| **Contraseña** | `EcoAula2026!` |
-| **Rol** | `APRENDIZ` |
-| **Preferencias iniciales** | Velocidad de audio 1.0x, Modo estándar, Tamaño texto normal |
+| Rol | Correo electrónico | Contraseña | Portal de inicio | Descripción |
+|---|---|---|---|---|
+| **Aprendiz** | `aprendiz@ecoaula.local` | `EcoAula2026!` | `/cursos` | Experiencia del estudiante (catálogo, lecciones con audio/transcripción, evaluación y certificado). |
+| **Gestor de Contenido** | `gestor@ecoaula.local` | `GestorEcoAula2026!` | `/gestor/cursos` | Administración de cursos, creación de lecciones, subida de audios (MP3/WAV/OGG), transcripciones y envío a revisión (ADR-08). |
+| **Revisor de Accesibilidad** | `revisor@ecoaula.local` | `RevisorEcoAula2026!` | `/revisor/cola` | Auditoría con lista de chequeo WCAG 2.1 AA / NTC 5854, aprobación/publicación, rechazos con motivo y panel de indicadores de calidad. |
 
----
+> [!NOTE]
+> Al iniciar la aplicación en perfiles `dev` o `dev-h2`, se precarga una lección en estado **`EN_REVISION`** en el curso *"Atención al Cliente Inclusiva y Accesible"*, permitiendo auditar inmediatamente la cola desde la cuenta del revisor.
 
 ## 🛠️ Comandos de Validación y Pruebas
 
