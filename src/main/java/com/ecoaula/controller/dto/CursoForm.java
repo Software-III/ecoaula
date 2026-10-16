@@ -1,5 +1,6 @@
 package com.ecoaula.controller.dto;
 
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -19,7 +20,8 @@ public class CursoForm {
     private String descripcion;
 
     @NotNull(message = "La intensidad horaria es obligatoria")
-    @Min(value = 1, message = "La duración mínima es de 1 hora")
+    @Min(value = 8, message = "La duración mínima de un curso complementario es de 8 horas")
+    @Max(value = 40, message = "La duración máxima de un curso complementario es de 40 horas")
     private Integer horas;
 
     @NotBlank(message = "El área de conocimiento es obligatoria")
@@ -28,7 +30,9 @@ public class CursoForm {
     @NotBlank(message = "La modalidad es obligatoria")
     private String modalidad = "Virtual accesible";
 
-    private boolean activo = true;
+    /** Número máximo de aprendices; vacío significa sin límite. */
+    @Min(value = 1, message = "El cupo máximo debe ser de al menos 1 aprendiz; déjelo vacío para no limitarlo")
+    private Integer cupoMaximo;
 
     public CursoForm() {
     }
@@ -73,11 +77,11 @@ public class CursoForm {
         this.modalidad = modalidad;
     }
 
-    public boolean isActivo() {
-        return activo;
+    public Integer getCupoMaximo() {
+        return cupoMaximo;
     }
 
-    public void setActivo(boolean activo) {
-        this.activo = activo;
+    public void setCupoMaximo(Integer cupoMaximo) {
+        this.cupoMaximo = cupoMaximo;
     }
 }

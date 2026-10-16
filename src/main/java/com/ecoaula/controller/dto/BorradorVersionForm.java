@@ -10,6 +10,11 @@ public class BorradorVersionForm {
     private String transcripcion;
     private MultipartFile archivoAudio;
 
+    /** Fuente del material y su licencia o autorización de uso (Ley 23 de 1982). */
+    private String fuenteMaterial;
+
+    private boolean licenciaDeclarada;
+
     public BorradorVersionForm() {
     }
 
@@ -31,5 +36,21 @@ public class BorradorVersionForm {
 
     public void setArchivoAudio(MultipartFile archivoAudio) {
         this.archivoAudio = archivoAudio;
+    }
+
+    public String getFuenteMaterial() {
+        return fuenteMaterial;
+    }
+
+    public void setFuenteMaterial(String fuenteMaterial) {
+        this.fuenteMaterial = fuenteMaterial;
+    }
+
+    public boolean isLicenciaDeclarada() {
+        return licenciaDeclarada;
+    }
+
+    public void setLicenciaDeclarada(boolean licenciaDeclarada) {
+        this.licenciaDeclarada = licenciaDeclarada;
     }
 }

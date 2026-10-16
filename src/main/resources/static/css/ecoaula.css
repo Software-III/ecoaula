@@ -597,3 +597,85 @@ body.modo-alto-contraste .tarjeta-indicador .valor-indicador {
     margin-top: 0.25rem;
     font-style: italic;
 }
+
+/* --------------------------------------------------------------------------
+   Informe de revisión de accesibilidad (Proceso 2)
+   -------------------------------------------------------------------------- */
+.tabla-informe {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1.5rem;
+}
+
+.tabla-informe caption {
+    text-align: left;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.tabla-informe th,
+.tabla-informe td {
+    border: 1px solid var(--color-borde);
+    padding: 0.6rem;
+    text-align: left;
+    vertical-align: top;
+    overflow-wrap: anywhere;
+}
+
+.tabla-informe thead th {
+    background-color: var(--color-fondo-panel);
+}
+
+/* Reflow a 320 px (WCAG 1.4.10): cada fila se apila como bloque con su etiqueta */
+@media (max-width: 600px) {
+    .tabla-informe thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+    }
+
+    .tabla-informe tr,
+    .tabla-informe td,
+    .tabla-informe th[scope="row"] {
+        display: block;
+    }
+
+    .tabla-informe tr {
+        border: 1px solid var(--color-borde);
+        margin-bottom: 0.75rem;
+    }
+
+    .tabla-informe td {
+        border: none;
+    }
+
+    .tabla-informe td::before {
+        content: attr(data-etiqueta) ": ";
+        font-weight: bold;
+    }
+}
+
+@media print {
+    .skip-link,
+    .encabezado-sitio,
+    .no-imprimir {
+        display: none !important;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   Imágenes de lecciones con alternativa textual (WCAG 1.1.1)
+   -------------------------------------------------------------------------- */
+.figura-leccion {
+    margin: 0 0 1rem 0;
+}
+
+.figura-leccion img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    border: 1px solid var(--color-borde);
+    margin-bottom: 0.5rem;
+}

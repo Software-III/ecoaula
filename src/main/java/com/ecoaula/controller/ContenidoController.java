@@ -1,6 +1,9 @@
 package com.ecoaula.controller;
 
+import com.ecoaula.analitica.RegistroEventosService;
 import com.ecoaula.model.Contenido;
+import com.ecoaula.model.enums.TipoEvento;
+import jakarta.servlet.http.HttpSession;
 import com.ecoaula.model.ContenidoVersion;
 import com.ecoaula.model.Curso;
 import com.ecoaula.model.Matricula;
@@ -18,7 +21,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.security.Principal;
-import java.util.List;
 
 /**
  * Controlador para la visualización accesible de lecciones y avance por versión (Pantalla 4).
@@ -29,25 +31,26 @@ public class ContenidoController {
     private final CursoService cursoService;
     private final ContenidoService contenidoService;
     private final MatriculaService matriculaService;
+    private final RegistroEventosService registroEventos;
 
     public ContenidoController(CursoService cursoService,
                                ContenidoService contenidoService,
-                               MatriculaService matriculaService) {
+                               MatriculaService matriculaService,
+                             RegistroEventosService registroEventos) {
         this.cursoService = cursoService;
         this.contenidoService = contenidoService;
         this.matriculaService = matriculaService;
+        this.registroEventos = registroEventos;
     }
 
     @GetMapping("/cursos/{id}/lecciones/{n}")
     public String verLeccion(@PathVariable("id") Long cursoId,
                              @PathVariable("n") Integer orden,
                              Principal principal,
+                             HttpSession session,
                              Model model) {
-        // Validar que el usuario esté matriculado
-        if (!matriculaService.estaMatriculado(principal.getName(), cursoId)) {
-            // Si no está matriculado, matricularlo automáticamente o redirigir
-            matriculaService.matricular(principal.getName(), cursoId);
-        }
+        // Solo los aprendices matriculados acceden a las lecciones; la matrícula se hace desde el catálogo
+        contenidoService.verificarMatricula(principal.getName(), cursoId);
 
         Curso curso = cursoService.obtenerPorId(cursoId);
         Contenido leccion = contenidoService.obtenerLeccionPorOrden(cursoId, orden);
@@ -56,14 +59,18 @@ public class ContenidoController {
         boolean completada = contenidoService.estaLeccionCompletada(principal.getName(), leccion.getId());
         boolean esUltimaLeccion = (orden >= totalLecciones);
 
+        registroEventos.registrar(TipoEvento.LECCION_ABIERTA, session, principal.getName(), cursoId, leccion.getId());
+
         model.addAttribute("titulo", "Lección " + orden + ": " + leccion.getTitulo() + " — " + curso.getTitulo());
         model.addAttribute("curso", curso);
         model.addAttribute("leccion", leccion);
         model.addAttribute("version", version);
+        model.addAttribute("imagenes", contenidoService.listarImagenes(version.getId()));
         model.addAttribute("orden", orden);
         model.addAttribute("totalLecciones", totalLecciones);
         model.addAttribute("completada", completada);
         model.addAttribute("esUltimaLeccion", esUltimaLeccion);
+        model.addAttribute("matricula", matriculaService.obtenerPorAprendizYCurso(principal.getName(), cursoId));
 
         return "cursos/leccion";
     }
@@ -72,18 +79,17 @@ public class ContenidoController {
     public String completarLeccion(@PathVariable("id") Long cursoId,
                                    @PathVariable("n") Integer orden,
                                    @RequestParam("versionId") Long versionId,
-                                   Principal principal) {
-        // Registrar avance ligado a la versión exacta (ADR-08)
-        contenidoService.registrarAvance(principal.getName(), versionId);
+                                   Principal principal,
+                                   HttpSession session) {
+        // Registrar avance ligado a la versión exacta que se le entregó al aprendiz (ADR-08)
+        contenidoService.registrarAvanceEnLeccion(principal.getName(), cursoId, orden, versionId);
+        registroEventos.registrar(TipoEvento.LECCION_COMPLETADA, session, principal.getName(), cursoId,
+                contenidoService.obtenerLeccionPorOrden(cursoId, orden).getId());
 
         long totalLecciones = contenidoService.contarLeccionesEnCurso(cursoId);
         if (orden >= totalLecciones) {
             // Al completar la última lección, redirigir a la evaluación del curso
-            List<Matricula> matriculas = matriculaService.listarPorAprendiz(principal.getName());
-            Matricula matricula = matriculas.stream()
-                    .filter(m -> m.getCurso().getId().equals(cursoId))
-                    .findFirst()
-                    .orElseThrow();
+            Matricula matricula = matriculaService.obtenerPorAprendizYCurso(principal.getName(), cursoId);
             return "redirect:/matriculas/" + matricula.getId() + "/evaluacion";
         }
 
@@ -95,12 +101,14 @@ public class ContenidoController {
     public ResponseEntity<byte[]> descargarTranscripcion(@PathVariable("id") Long cursoId,
                                                          @PathVariable("n") Integer orden,
                                                          Principal principal) {
+        contenidoService.verificarMatricula(principal.getName(), cursoId);
         Curso curso = cursoService.obtenerPorId(cursoId);
         Contenido leccion = contenidoService.obtenerLeccionPorOrden(cursoId, orden);
         ContenidoVersion version = contenidoService.obtenerVersionParaAprendiz(leccion.getId(), principal.getName());
 
         byte[] contenidoTxt = contenidoService.generarArchivoTranscripcion(
-                curso.getTitulo(), leccion.getTitulo(), orden, version.getTranscripcion()
+                curso.getTitulo(), leccion.getTitulo(), orden, version.getTranscripcion(),
+                contenidoService.listarImagenes(version.getId())
         );
 
         String nombreDescarga = "transcripcion-leccion-" + orden + ".txt";

@@ -18,6 +18,9 @@
             <nav class="navegacion-principal" role="navigation" aria-label="Navegación principal">
                 <ul>
                     <li><a th:href="@{/gestor/cursos}">Mis Cursos y Contenidos</a></li>
+                    <li><a th:href="@{/informes-revision}">Informes de revisión</a></li>
+                    <li><a th:href="@{/reportes-barrera}">Reportes de barreras</a></li>
+                    <li><a th:href="@{/indicadores}">Indicadores</a></li>
                     <li><a th:href="@{/perfil}">Mi Perfil</a></li>
                 </ul>
             </nav>
@@ -26,6 +29,11 @@
 
     <main id="contenido-principal" class="contenedor-principal" role="main" tabindex="-1">
         <h1 th:text="${titulo}">Crear o Editar Curso</h1>
+
+        <div th:if="${mensajeError != null}" class="alerta alerta-error" role="alert" th:text="${mensajeError}"></div>
+        <p th:if="${curso != null and curso.activo}" class="alerta alerta-error" role="note">
+            Este curso está publicado en el catálogo. Retírelo del catálogo para modificar sus datos o eliminarlo.
+        </p>
 
         <p>Diligencie los campos requeridos para la configuración accesible del curso. Todos los campos marcados con asterisco (*) son obligatorios.</p>
 
@@ -76,19 +84,41 @@
                 <span th:if="${#fields.hasErrors('modalidad')}" th:errors="*{modalidad}" class="error-campo" role="alert"></span>
             </div>
 
-            <fieldset>
-                <legend>Estado del curso</legend>
-                <div class="opcion-seleccion">
-                    <input type="checkbox" id="activo" th:field="*{activo}">
-                    <label for="activo">Curso activo (visible en el catálogo público)</label>
-                </div>
-            </fieldset>
+            <div class="grupo-campo">
+                <label for="cupoMaximo">Cupo máximo de aprendices (opcional)</label>
+                <div class="ayuda-campo" id="ayuda-cupo">Déjelo vacío si el curso no tiene límite de matrículas.</div>
+                <input type="number" id="cupoMaximo" th:field="*{cupoMaximo}" min="1" aria-describedby="ayuda-cupo"
+                       th:aria-invalid="${#fields.hasErrors('cupoMaximo')}">
+                <span th:if="${#fields.hasErrors('cupoMaximo')}" th:errors="*{cupoMaximo}" class="error-campo" role="alert"></span>
+            </div>
+
+            <p class="ayuda-campo">
+                El curso se publica en el catálogo desde el listado de cursos, cuando todas sus lecciones tienen una versión
+                aprobada por el revisor de accesibilidad y el curso tiene evaluación final.
+            </p>
 
             <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 2rem;">
                 <button type="submit" class="boton-principal" th:text="${esEdicion ? 'Guardar Cambios' : 'Crear Curso'}">Guardar</button>
                 <a th:href="@{/gestor/cursos}" class="boton-secundario">Cancelar</a>
             </div>
         </form>
+
+        <!-- Eliminación con confirmación explícita (sin diálogos de JavaScript, accesible por teclado y lector de pantalla) -->
+        <section th:if="${esEdicion}" id="seccion-eliminar" aria-labelledby="titulo-eliminar" style="margin-top: 3rem; border-top: 2px solid var(--color-borde); padding-top: 1.5rem;">
+            <h2 id="titulo-eliminar" style="font-size: 1.3rem;">Eliminar curso</h2>
+            <p>
+                Se eliminarán de forma definitiva el curso, todas sus lecciones y versiones, sus imágenes, sus informes de revisión
+                y su evaluación final. Solo es posible si el curso está fuera del catálogo, no tiene aprendices matriculados
+                y no tiene versiones en revisión.
+            </p>
+            <form th:action="@{/gestor/cursos/{id}/eliminar(id=${cursoId})}" method="post">
+                <div class="opcion-seleccion">
+                    <input type="checkbox" id="confirmar-eliminar-curso" name="confirmar" value="true" required>
+                    <label for="confirmar-eliminar-curso">Confirmo que deseo eliminar este curso y todo su contenido.</label>
+                </div>
+                <button type="submit" class="boton-secundario">Eliminar curso definitivamente</button>
+            </form>
+        </section>
     </main>
 
 </body>

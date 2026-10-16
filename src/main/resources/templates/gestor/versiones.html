@@ -18,6 +18,9 @@
             <nav class="navegacion-principal" role="navigation" aria-label="Navegación principal">
                 <ul>
                     <li><a th:href="@{/gestor/cursos}">Mis Cursos y Contenidos</a></li>
+                    <li><a th:href="@{/informes-revision}">Informes de revisión</a></li>
+                    <li><a th:href="@{/reportes-barrera}">Reportes de barreras</a></li>
+                    <li><a th:href="@{/indicadores}">Indicadores</a></li>
                     <li><a th:href="@{/perfil}">Mi Perfil</a></li>
                 </ul>
             </nav>
@@ -116,6 +119,10 @@
                                         <strong>Motivo de rechazo:</strong>
                                         <div th:text="${v.motivoRechazo}">Detalle del motivo...</div>
                                     </div>
+                                    <p th:if="${informePorVersion.containsKey(v.id)}" style="margin: 0 0 0.5rem 0;">
+                                        <a th:href="@{/informes-revision/{id}(id=${informePorVersion.get(v.id)})}"
+                                           th:attr="aria-label='Ver el informe de revisión de la versión ' + ${v.numeroVersion}">Ver informe de revisión completo</a>
+                                    </p>
                                     <form th:action="@{/gestor/versiones/{id}/corregir(id=${v.id})}" method="post">
                                         <button type="submit" class="boton-principal" style="min-height: 38px; padding: 0.35rem 0.75rem; font-size: 0.95rem;">
                                             Subsanar (Crear borrador desde esta)

@@ -1,5 +1,7 @@
 package com.ecoaula.security;
 
+import com.ecoaula.analitica.RegistroEventosService;
+import com.ecoaula.model.enums.TipoEvento;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -20,7 +22,10 @@ import java.util.Collection;
 @Component
 public class EcoAulaAuthenticationSuccessHandler extends SavedRequestAwareAuthenticationSuccessHandler {
 
-    public EcoAulaAuthenticationSuccessHandler() {
+    private final RegistroEventosService registroEventos;
+
+    public EcoAulaAuthenticationSuccessHandler(RegistroEventosService registroEventos) {
+        this.registroEventos = registroEventos;
         setDefaultTargetUrl("/cursos");
     }
 
@@ -28,6 +33,13 @@ public class EcoAulaAuthenticationSuccessHandler extends SavedRequestAwareAuthen
     public void onAuthenticationSuccess(HttpServletRequest request,
                                         HttpServletResponse response,
                                         Authentication authentication) throws IOException, ServletException {
+        // Solo los aprendices cuentan para la analítica del aprendizaje (no el personal interno)
+        boolean esAprendiz = authentication.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_APRENDIZ".equals(a.getAuthority()));
+        if (esAprendiz) {
+            registroEventos.registrar(TipoEvento.INICIO_SESION, request.getSession(), authentication.getName());
+        }
+
         SavedRequest savedRequest = new HttpSessionRequestCache().getRequest(request, response);
         if (savedRequest != null) {
             super.onAuthenticationSuccess(request, response, authentication);
@@ -42,6 +54,10 @@ public class EcoAulaAuthenticationSuccessHandler extends SavedRequestAwareAuthen
             }
             if ("ROLE_REVISOR_ACCESIBILIDAD".equals(authority.getAuthority())) {
                 getRedirectStrategy().sendRedirect(request, response, "/revisor/cola");
+                return;
+            }
+            if ("ROLE_COORDINADOR".equals(authority.getAuthority())) {
+                getRedirectStrategy().sendRedirect(request, response, "/reportes-barrera");
                 return;
             }
         }

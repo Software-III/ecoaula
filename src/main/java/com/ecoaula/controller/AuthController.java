@@ -1,9 +1,11 @@
 package com.ecoaula.controller;
 
+import com.ecoaula.analitica.RegistroEventosService;
 import com.ecoaula.controller.advice.GlobalAccessibilityAdvice;
 import com.ecoaula.controller.dto.PerfilForm;
 import com.ecoaula.controller.dto.RegistroForm;
 import com.ecoaula.model.PerfilAccesibilidad;
+import com.ecoaula.model.enums.TipoEvento;
 import com.ecoaula.service.AccesibilidadService;
 import com.ecoaula.service.AprendizService;
 import jakarta.servlet.http.HttpSession;
@@ -26,11 +28,14 @@ public class AuthController {
 
     private final AprendizService aprendizService;
     private final AccesibilidadService accesibilidadService;
+    private final RegistroEventosService registroEventos;
 
     public AuthController(AprendizService aprendizService,
-                          AccesibilidadService accesibilidadService) {
+                          AccesibilidadService accesibilidadService,
+                          RegistroEventosService registroEventos) {
         this.aprendizService = aprendizService;
         this.accesibilidadService = accesibilidadService;
+        this.registroEventos = registroEventos;
     }
 
     @GetMapping("/")
@@ -57,7 +62,9 @@ public class AuthController {
     }
 
     @GetMapping("/registro")
-    public String mostrarRegistro(Model model) {
+    public String mostrarRegistro(Model model, HttpSession session) {
+        // Inicio del recorrido de matrícula (indicadores del Proceso 1)
+        registroEventos.registrarUnaVezPorVisita(TipoEvento.REGISTRO_INICIADO, session);
         model.addAttribute("titulo", "Registro y Perfil de Accesibilidad");
         if (!model.containsAttribute("form")) {
             model.addAttribute("form", new RegistroForm());
@@ -68,6 +75,7 @@ public class AuthController {
     @PostMapping("/registro")
     public String procesarRegistro(@Valid @ModelAttribute("form") RegistroForm form,
                                   BindingResult bindingResult,
+                                  HttpSession session,
                                   Model model) {
         model.addAttribute("titulo", "Registro y Perfil de Accesibilidad");
         if (bindingResult.hasErrors()) {
@@ -76,6 +84,7 @@ public class AuthController {
 
         try {
             aprendizService.registrar(form);
+            registroEventos.registrar(TipoEvento.REGISTRO_COMPLETADO, session, form.getCorreo());
             return "redirect:/login?registrado=true";
         } catch (Exception ex) {
             model.addAttribute("mensajeError", ex.getMessage());
@@ -90,6 +99,7 @@ public class AuthController {
 
         PerfilForm form = new PerfilForm();
         form.setVelocidadAudio(perfil.getVelocidadAudio());
+        form.setVozLectura(perfil.getVozLectura());
         form.setModoVisual(perfil.getModoVisual());
         form.setTamanoTexto(perfil.getTamanoTexto());
         form.setSoloAudio(perfil.isSoloAudio());
@@ -111,6 +121,7 @@ public class AuthController {
 
         PerfilAccesibilidad datos = new PerfilAccesibilidad();
         datos.setVelocidadAudio(form.getVelocidadAudio());
+        datos.setVozLectura(form.getVozLectura());
         datos.setModoVisual(form.getModoVisual());
         datos.setTamanoTexto(form.getTamanoTexto());
         datos.setSoloAudio(form.isSoloAudio());

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${titulo} + ' — EcoAula'">EcoAula</title>
+    <link rel="stylesheet" th:href="@{/css/ecoaula.css}">
+</head>
+<body th:class="${(perfilAccesibilidad != null and perfilAccesibilidad.modoVisual != null and perfilAccesibilidad.modoVisual.name() == 'ALTO_CONTRASTE' ? 'modo-alto-contraste ' : '') + (perfilAccesibilidad != null and perfilAccesibilidad.tamanoTexto != null and perfilAccesibilidad.tamanoTexto.name() == 'GRANDE' ? 'texto-grande ' : '') + (perfilAccesibilidad != null and perfilAccesibilidad.soloAudio ? 'solo-audio ' : '')}">
+
+    <a href="#contenido-principal" class="skip-link">Saltar al contenido principal</a>
+
+    <header class="encabezado-sitio" role="banner">
+        <div class="contenedor-principal">
+            <div style="font-size: 1.5rem; font-weight: bold;">EcoAula</div>
+            <nav class="navegacion-principal" role="navigation" aria-label="Navegación principal">
+                <ul>
+                    <li sec:authorize="hasRole('GESTOR_CONTENIDO')"><a th:href="@{/gestor/cursos}">Gestión de contenido</a></li>
+                    <li sec:authorize="hasRole('REVISOR_ACCESIBILIDAD')"><a th:href="@{/revisor/cola}">Revisión de accesibilidad</a></li>
+                    <li sec:authorize="hasAnyRole('GESTOR_CONTENIDO','REVISOR_ACCESIBILIDAD')"><a th:href="@{/informes-revision}">Informes de revisión</a></li>
+                    <li><a th:href="@{/reportes-barrera}">Reportes de barreras</a></li>
+                    <li><a th:href="@{/indicadores}">Indicadores</a></li>
+                    <li><a th:href="@{/perfil}">Mi Perfil</a></li>
+                    <li sec:authorize="isAuthenticated()">
+                        <form th:action="@{/logout}" method="post" style="display: inline;">
+                            <button type="submit" class="boton-secundario" style="min-height: 38px; padding: 0.25rem 0.75rem; font-size: 1rem;">Cerrar Sesión</button>
+                        </form>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main id="contenido-principal" class="contenedor-principal" role="main" tabindex="-1" th:with="v=${informe.version}">
+        <h1>Informe de Revisión de Accesibilidad</h1>
+
+        <section aria-labelledby="titulo-datos">
+            <h2 id="titulo-datos" style="font-size: 1.25rem;">Datos de la revisión</h2>
+            <dl>
+                <dt>Curso</dt>
+                <dd th:text="${v.contenido.curso.titulo}">Curso</dd>
+                <dt>Lección</dt>
+                <dd th:text="${v.contenido.orden} + '. ' + ${v.contenido.titulo}">Lección</dd>
+                <dt>Versión revisada</dt>
+                <dd th:text="'Versión ' + ${v.numeroVersion} + (${v.versionOrigen != null} ? ' (subsanación de la versión ' + ${v.versionOrigen.numeroVersion} + ')' : '')">v1</dd>
+                <dt>Revisor de accesibilidad</dt>
+                <dd th:text="${informe.revisor.nombreCompleto} + ' (' + ${informe.revisor.correo} + ')'">Revisor</dd>
+                <dt>Fecha de la revisión</dt>
+                <dd th:text="${#temporals.format(informe.fecha, 'dd/MM/yyyy HH:mm')}">Fecha</dd>
+                <dt>Resultado</dt>
+                <dd><strong th:text="${informe.resultado.name() == 'APROBADA'} ? 'Aprobada y publicada' : 'Rechazada: el gestor debe subsanarla'">Resultado</strong></dd>
+            </dl>
+        </section>
+
+        <section aria-labelledby="titulo-checklist">
+            <h2 id="titulo-checklist" style="font-size: 1.25rem;"
+                th:text="'Checklist WCAG 2.1 AA / NTC 5854: ' + ${#sets.size(informe.itemsChequeados)} + ' de ' + ${#lists.size(criterios)} + ' criterios cumplidos'">Checklist</h2>
+            <table class="tabla-informe">
+                <caption>Resultado de cada criterio del checklist institucional</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Referencia</th>
+                        <th scope="col">Criterio</th>
+                        <th scope="col">Resultado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="c : ${criterios}">
+                        <td data-etiqueta="Referencia" th:text="${c.normaReferencia}">WCAG 1.2.1</td>
+                        <td data-etiqueta="Criterio" th:text="${c.descripcion}">Descripción</td>
+                        <td data-etiqueta="Resultado"><strong th:text="${informe.itemsChequeados.contains(c.codigo)} ? 'Cumple' : 'No cumple'">Cumple</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section aria-labelledby="titulo-motivo">
+            <h2 id="titulo-motivo" style="font-size: 1.25rem;">Motivo del rechazo</h2>
+            <p th:if="${informe.motivo == null}">No aplica: la versión fue aprobada.</p>
+            <p th:if="${informe.motivo != null}" th:text="${informe.motivo}" style="white-space: pre-line;">Motivo</p>
+        </section>
+
+        <p class="no-imprimir" style="margin-top: 2rem;">
+            Para guardar o imprimir este informe use la opción Imprimir de su navegador (Control + P).
+            <br>
+            <a th:href="@{/informes-revision}">Volver al listado de informes</a>
+        </p>
+    </main>
+
+</body>
+</html>

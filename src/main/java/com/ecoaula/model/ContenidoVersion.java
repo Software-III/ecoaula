@@ -51,6 +51,12 @@ public class ContenidoVersion {
     @JoinColumn(name = "version_origen_id", nullable = true)
     private ContenidoVersion versionOrigen;
 
+    // Material fuente con licencia o autorización de uso (Ley 23 de 1982)
+    @Column(columnDefinition = "TEXT")
+    private String fuenteMaterial;
+
+    private LocalDateTime licenciaDeclaradaEn;
+
     @PrePersist
     protected void onPrePersist() {
         if (creadoEn == null) {
@@ -202,5 +208,21 @@ public class ContenidoVersion {
 
     public void setVersionOrigen(ContenidoVersion versionOrigen) {
         this.versionOrigen = versionOrigen;
+    }
+
+    public String getFuenteMaterial() {
+        return fuenteMaterial;
+    }
+
+    public void setFuenteMaterial(String fuenteMaterial) {
+        this.fuenteMaterial = fuenteMaterial;
+    }
+
+    public LocalDateTime getLicenciaDeclaradaEn() {
+        return licenciaDeclaradaEn;
+    }
+
+    public void setLicenciaDeclaradaEn(LocalDateTime licenciaDeclaradaEn) {
+        this.licenciaDeclaradaEn = licenciaDeclaradaEn;
     }
 }

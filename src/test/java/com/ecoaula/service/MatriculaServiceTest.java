@@ -1,5 +1,7 @@
 package com.ecoaula.service;
 
+import com.ecoaula.exception.EcoAulaException;
+
 import com.ecoaula.exception.AccesoDenegadoException;
 import com.ecoaula.exception.MatriculaDuplicadaException;
 import com.ecoaula.model.Aprendiz;
@@ -59,7 +61,7 @@ class MatriculaServiceTest {
     @DisplayName("Debe matricular exitosamente al aprendiz si no tiene matrícula previa")
     void debeMatricularExitosamente() {
         when(aprendizRepository.findByCorreo(aprendiz.getCorreo())).thenReturn(Optional.of(aprendiz));
-        when(cursoRepository.findById(curso.getId())).thenReturn(Optional.of(curso));
+        when(cursoRepository.findByIdParaMatricular(curso.getId())).thenReturn(Optional.of(curso));
         when(matriculaRepository.existsByAprendizIdAndCursoId(aprendiz.getId(), curso.getId())).thenReturn(false);
 
         Matricula guardada = new Matricula(aprendiz, curso);
@@ -77,7 +79,7 @@ class MatriculaServiceTest {
     @DisplayName("Debe rechazar con MatriculaDuplicadaException si el aprendiz ya está matriculado en el curso")
     void debeRechazarMatriculaDuplicada() {
         when(aprendizRepository.findByCorreo(aprendiz.getCorreo())).thenReturn(Optional.of(aprendiz));
-        when(cursoRepository.findById(curso.getId())).thenReturn(Optional.of(curso));
+        when(cursoRepository.findByIdParaMatricular(curso.getId())).thenReturn(Optional.of(curso));
         when(matriculaRepository.existsByAprendizIdAndCursoId(aprendiz.getId(), curso.getId())).thenReturn(true);
 
         assertThrows(MatriculaDuplicadaException.class, () ->
@@ -96,5 +98,51 @@ class MatriculaServiceTest {
 
         assertThrows(AccesoDenegadoException.class, () ->
                 matriculaService.obtenerPorIdYValidarPropiedad(200L, "otro.usuario@ecoaula.local"));
+    }
+
+    @Test
+    @DisplayName("Debe rechazar la matrícula cuando el curso no tiene cupos disponibles")
+    void debeRechazarMatriculaSinCupo() {
+        curso.setCupoMaximo(2);
+        when(aprendizRepository.findByCorreo(aprendiz.getCorreo())).thenReturn(Optional.of(aprendiz));
+        when(cursoRepository.findByIdParaMatricular(curso.getId())).thenReturn(Optional.of(curso));
+        when(matriculaRepository.existsByAprendizIdAndCursoId(aprendiz.getId(), curso.getId())).thenReturn(false);
+        when(matriculaRepository.countByCursoId(curso.getId())).thenReturn(2L);
+
+        EcoAulaException ex = assertThrows(EcoAulaException.class,
+                () -> matriculaService.matricular(aprendiz.getCorreo(), curso.getId()));
+        assertTrue(ex.getMessage().contains("no tiene cupos disponibles"));
+        verify(matriculaRepository, never()).save(any(Matricula.class));
+    }
+
+    @Test
+    @DisplayName("Debe matricular mientras queden cupos y calcular los disponibles")
+    void debeMatricularConCupoDisponible() {
+        curso.setCupoMaximo(2);
+        when(aprendizRepository.findByCorreo(aprendiz.getCorreo())).thenReturn(Optional.of(aprendiz));
+        when(cursoRepository.findByIdParaMatricular(curso.getId())).thenReturn(Optional.of(curso));
+        when(matriculaRepository.existsByAprendizIdAndCursoId(aprendiz.getId(), curso.getId())).thenReturn(false);
+        when(matriculaRepository.countByCursoId(curso.getId())).thenReturn(1L);
+        when(matriculaRepository.save(any(Matricula.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        assertNotNull(matriculaService.matricular(aprendiz.getCorreo(), curso.getId()));
+        assertEquals(1L, matriculaService.cuposDisponibles(curso));
+    }
+
+    @Test
+    @DisplayName("Un curso sin cupo máximo no limita las matrículas")
+    void cursoSinCupoNoLimita() {
+        assertNull(matriculaService.cuposDisponibles(curso));
+    }
+
+    @Test
+    @DisplayName("Debe rechazar la matrícula en un curso retirado del catálogo")
+    void debeRechazarMatriculaEnCursoRetirado() {
+        curso.setActivo(false);
+        when(aprendizRepository.findByCorreo(aprendiz.getCorreo())).thenReturn(Optional.of(aprendiz));
+        when(cursoRepository.findByIdParaMatricular(curso.getId())).thenReturn(Optional.of(curso));
+
+        assertThrows(EcoAulaException.class, () -> matriculaService.matricular(aprendiz.getCorreo(), curso.getId()));
+        verify(matriculaRepository, never()).save(any(Matricula.class));
     }
 }

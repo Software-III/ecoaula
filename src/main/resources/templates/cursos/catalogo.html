@@ -19,6 +19,8 @@
                 <ul>
                     <li><a th:href="@{/cursos}" aria-current="page">Catálogo de Cursos</a></li>
                     <li sec:authorize="isAuthenticated()"><a th:href="@{/perfil}">Mi Perfil</a></li>
+                    <li sec:authorize="isAuthenticated()"><a th:href="@{/mis-reportes}">Mis reportes</a></li>
+                    <li><a th:href="@{/reportar-barrera(etapa='REGISTRO_MATRICULA')}">Reportar una barrera</a></li>
                     <li sec:authorize="isAnonymous()"><a th:href="@{/registro}">Registrarme</a></li>
                     <li sec:authorize="isAnonymous()"><a th:href="@{/login}">Iniciar Sesión</a></li>
                     <li sec:authorize="isAuthenticated()">
@@ -70,20 +72,34 @@
                         <span th:text="${curso.horas} + ' horas'">10 horas</span> · 
                         <span th:text="${curso.area}">Tecnología</span> · 
                         <span th:text="${curso.modalidad}">Virtual accesible</span>
+                        <th:block th:if="${cuposDisponibles.containsKey(curso.id)}">
+                            · <span th:text="'Cupos disponibles: ' + ${cuposDisponibles.get(curso.id)} + ' de ' + ${curso.cupoMaximo}">Cupos</span>
+                        </th:block>
                     </p>
 
                     <p th:text="${curso.descripcion}" style="margin-bottom: 1.5rem;">Descripción del curso...</p>
+
+                    <p th:unless="${curso.activo}" class="alerta" role="note">
+                        Este curso fue retirado del catálogo y no recibe matrículas nuevas.
+                        Usted conserva el acceso a sus lecciones, su evaluación y su certificado.
+                    </p>
 
                     <!-- Acciones según estado de autenticación y matrícula -->
                     <div sec:authorize="isAuthenticated()">
                         <!-- Si ya está matriculado -->
                         <div th:if="${matriculasPorCurso.containsKey(curso.id)}">
-                            <a th:href="@{/matriculas/{id}/confirmacion(id=${matriculasPorCurso.get(curso.id)})}" class="boton-principal">
+                            <a th:href="@{/matriculas/{id}(id=${matriculasPorCurso.get(curso.id)})}" class="boton-principal">
                                 Continuar curso
                             </a>
                         </div>
                         <!-- Si no está matriculado -->
-                        <form th:unless="${matriculasPorCurso.containsKey(curso.id)}" th:action="@{/cursos/{id}/matricular(id=${curso.id})}" method="post">
+                        <!-- Sin cupos: no se ofrece la matrícula -->
+                        <p th:if="${!matriculasPorCurso.containsKey(curso.id) and cuposDisponibles.containsKey(curso.id) and cuposDisponibles.get(curso.id) == 0}"
+                           class="alerta alerta-error" role="note">
+                            Este curso no tiene cupos disponibles en este momento.
+                        </p>
+                        <form th:if="${!matriculasPorCurso.containsKey(curso.id) and (!cuposDisponibles.containsKey(curso.id) or cuposDisponibles.get(curso.id) > 0)}"
+                              th:action="@{/cursos/{id}/matricular(id=${curso.id})}" method="post">
                             <button type="submit" class="boton-principal">
                                 Matricularme en este curso
                             </button>

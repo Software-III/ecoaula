@@ -43,12 +43,16 @@ public class SecurityConfig {
                     "/api/v1/certificados/**",
                     "/verificar",
                     "/css/**",
-                    "/audio/**",
+                    "/js/**",
+                    "/reportar-barrera",
+                    "/reportar-barrera/**",
                     "/error",
                     "/h2-console/**"
                 ).permitAll()
                 .requestMatchers("/gestor/**").hasRole("GESTOR_CONTENIDO")
                 .requestMatchers("/revisor/**").hasRole("REVISOR_ACCESIBILIDAD")
+                .requestMatchers("/informes-revision/**").hasAnyRole("GESTOR_CONTENIDO", "REVISOR_ACCESIBILIDAD")
+                .requestMatchers("/reportes-barrera/**", "/indicadores").hasAnyRole("GESTOR_CONTENIDO", "REVISOR_ACCESIBILIDAD", "COORDINADOR")
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form

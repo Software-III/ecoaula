@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +22,7 @@ import java.time.LocalDateTime;
  */
 @Component
 @Profile({"dev", "dev-h2"})
+@Order(1)
 public class DataInitializer implements CommandLineRunner {
 
     private static final Logger log = LoggerFactory.getLogger(DataInitializer.class);
@@ -58,7 +60,10 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
-        if (aprendizRepository.count() > 0) {
+        // La coordinación de matrícula se crea aunque ya existan datos (atiende los reportes de barreras)
+        crearCoordinadorSiNoExiste();
+
+        if (cursoRepository.count() > 0) {
             log.info("Datos de demostración ya existen. Omitiendo inicialización.");
             return;
         }
@@ -164,18 +169,8 @@ public class DataInitializer implements CommandLineRunner {
         crearLeccion(c2, 3, "Servicio y trámites digitales accesibles", rutaAudio3,
                 "Transcripción: Garantizar que los formularios y canales virtuales de atención cumplan con la norma técnica colombiana NTC 5854.", gestor);
 
-        // Lección de demostración en estado EN_REVISION para probar la cola del revisor de inmediato
-        Contenido cEnRevision = new Contenido("Atención telefónica y mensajería accesible", 4, c2);
-        cEnRevision = contenidoRepository.save(cEnRevision);
-        ContenidoVersion vRevision = new ContenidoVersion(cEnRevision, 1, EstadoContenido.EN_REVISION, rutaAudio1,
-                "Transcripción de la lección en revisión:\n\n" +
-                "En esta lección se detallan los protocolos para atender llamadas y enviar mensajes claros a usuarios con baja visión o ceguera.\n" +
-                "Se destaca evitar abreviaturas ambiguas o emojis excesivos que dificulten la lectura de los sintetizadores de voz.",
-                null);
-        vRevision.setCreadoPor(gestor);
-        vRevision.setCreadoEn(LocalDateTime.now().minusHours(3));
-        vRevision.setEnviadaARevisionEn(LocalDateTime.now().minusHours(2));
-        versionRepository.save(vRevision);
+        // La cola del revisor se llena con DatosPruebaRevisionInitializer, fuera de los cursos publicados:
+        // una lección sin versión publicada en un curso del catálogo impediría a los aprendices terminarlo.
 
         crearEvaluacionServicio(c2);
 
@@ -206,7 +201,27 @@ public class DataInitializer implements CommandLineRunner {
         ContenidoVersion v = new ContenidoVersion(c, 1, EstadoContenido.PUBLICADA, rutaAudio, transcripcion, LocalDateTime.now());
         v.setCreadoPor(autor);
         v.setCreadoEn(LocalDateTime.now().minusDays(1));
+        v.setFuenteMaterial("Elaboración propia del equipo EcoAula (contenido de demostración).");
+        v.setLicenciaDeclaradaEn(LocalDateTime.now().minusDays(1));
         versionRepository.save(v);
+    }
+
+    private void crearCoordinadorSiNoExiste() {
+        String correo = "coordinador@ecoaula.local";
+        if (aprendizRepository.existsByCorreo(correo)) {
+            return;
+        }
+        Aprendiz coordinador = new Aprendiz();
+        coordinador.setNombreCompleto("Coordinación de Matrícula de Demostración");
+        coordinador.setCorreo(correo);
+        coordinador.setTelefono("3000000000");
+        coordinador.setPasswordHash(passwordEncoder.encode("CoordinadorEcoAula2026!"));
+        coordinador.setRol(Rol.COORDINADOR);
+        coordinador.setConsentimientoDatos(true);
+        coordinador.setFechaConsentimiento(LocalDateTime.now());
+        coordinador.setPerfilAccesibilidad(new PerfilAccesibilidad(coordinador));
+        aprendizRepository.save(coordinador);
+        log.info("Coordinación de matrícula creada: {} / CoordinadorEcoAula2026!", correo);
     }
 
     private void crearEvaluacionOfimatica(Curso curso) {

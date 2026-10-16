@@ -26,9 +26,15 @@ public interface MatriculaRepository extends JpaRepository<Matricula, Long> {
 
     boolean existsByAprendizIdAndCursoId(Long aprendizId, Long cursoId);
 
+    long countByCursoId(Long cursoId);
+
     boolean existsByAprendizCorreoAndCursoId(String correo, Long cursoId);
 
     List<Matricula> findByAprendizId(Long aprendizId);
 
+    @EntityGraph(attributePaths = {"curso"})
     List<Matricula> findByAprendizCorreo(String correo);
+
+    @EntityGraph(attributePaths = {"aprendiz"})
+    List<Matricula> findByCursoId(Long cursoId);
 }

@@ -2,6 +2,8 @@ package com.ecoaula.storage;
 
 import com.ecoaula.exception.RecursoNoEncontradoException;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.PathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
@@ -30,23 +32,19 @@ public class AlmacenamientoLocal implements AlmacenamientoContenido {
     }
 
     @Override
-    public String guardarAudio(String nombreArchivo, byte[] contenido) {
+    public String guardarArchivo(String nombreArchivo, byte[] contenido) {
         try {
-            Path destino = rutaBase.resolve(nombreArchivo).normalize();
-            if (!destino.startsWith(rutaBase)) {
-                throw new IllegalArgumentException("Ruta no válida: intento de path traversal");
-            }
-            Files.write(destino, contenido, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+            Files.write(resolver(nombreArchivo), contenido, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
             return nombreArchivo;
         } catch (IOException e) {
-            throw new IllegalStateException("Error al guardar archivo de audio en almacenamiento local", e);
+            throw new IllegalStateException("Error al guardar archivo en almacenamiento local", e);
         }
     }
 
     @Override
     public byte[] obtenerAudio(String rutaRelativa) {
         try {
-            Path archivo = rutaBase.resolve(rutaRelativa).normalize();
+            Path archivo = resolver(rutaRelativa);
             if (!Files.exists(archivo)) {
                 throw new RecursoNoEncontradoException("Archivo de audio no encontrado: " + rutaRelativa);
             }
@@ -62,8 +60,24 @@ public class AlmacenamientoLocal implements AlmacenamientoContenido {
     }
 
     @Override
+    public Resource obtenerRecurso(String rutaRelativa) {
+        Path archivo = resolver(rutaRelativa);
+        if (!Files.isRegularFile(archivo)) {
+            throw new RecursoNoEncontradoException("Archivo no encontrado: " + rutaRelativa);
+        }
+        return new PathResource(archivo);
+    }
+
+    @Override
     public boolean existe(String rutaRelativa) {
+        return Files.exists(resolver(rutaRelativa));
+    }
+
+    private Path resolver(String rutaRelativa) {
         Path archivo = rutaBase.resolve(rutaRelativa).normalize();
-        return Files.exists(archivo);
+        if (!archivo.startsWith(rutaBase)) {
+            throw new IllegalArgumentException("Ruta no válida: intento de path traversal");
+        }
+        return archivo;
     }
 }

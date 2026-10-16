@@ -7,6 +7,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 /**
  * Manejador global de excepciones para renderizar páginas de error accesibles.
@@ -72,6 +74,35 @@ public class GlobalExceptionHandler {
         log.warn("Acceso denegado: {}", ex.getMessage());
         model.addAttribute("codigoError", "403");
         model.addAttribute("tituloError", "Acceso no autorizado");
+        model.addAttribute("mensajeError", ex.getMessage());
+        return "error";
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    @ResponseStatus(HttpStatus.PAYLOAD_TOO_LARGE)
+    public String manejarArchivoDemasiadoGrande(MaxUploadSizeExceededException ex, Model model) {
+        log.warn("Archivo adjunto supera el tamaño máximo: {}", ex.getMessage());
+        model.addAttribute("codigoError", "413");
+        model.addAttribute("tituloError", "Archivo demasiado grande");
+        model.addAttribute("mensajeError", "El archivo adjunto supera el tamaño máximo permitido.");
+        return "error";
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public String manejarRutaInexistente(NoResourceFoundException ex, Model model) {
+        model.addAttribute("codigoError", "404");
+        model.addAttribute("tituloError", "Página no encontrada");
+        model.addAttribute("mensajeError", "La dirección solicitada no existe. Vuelva al catálogo de cursos para continuar.");
+        return "error";
+    }
+
+    @ExceptionHandler(EcoAulaException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public String manejarErrorDeDominio(EcoAulaException ex, Model model) {
+        log.warn("Operación rechazada: {}", ex.getMessage());
+        model.addAttribute("codigoError", "400");
+        model.addAttribute("tituloError", "No se pudo completar la operación");
         model.addAttribute("mensajeError", ex.getMessage());
         return "error";
     }

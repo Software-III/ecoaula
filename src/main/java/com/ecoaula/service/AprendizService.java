@@ -50,6 +50,7 @@ public class AprendizService {
 
         PerfilAccesibilidad perfil = new PerfilAccesibilidad(aprendiz);
         perfil.setVelocidadAudio(form.getVelocidadAudio());
+        perfil.setVozLectura(normalizarVoz(form.getVozLectura()));
         perfil.setModoVisual(form.getModoVisual());
         perfil.setTamanoTexto(form.getTamanoTexto());
         perfil.setSoloAudio(form.isSoloAudio());
@@ -58,6 +59,10 @@ public class AprendizService {
         Aprendiz guardado = aprendizRepository.save(aprendiz);
         notificacionService.notificarRegistro(guardado.getCorreo(), guardado.getNombreCompleto());
         return guardado;
+    }
+
+    static String normalizarVoz(String voz) {
+        return voz == null || voz.isBlank() ? null : voz.strip();
     }
 
     @Transactional(readOnly = true)

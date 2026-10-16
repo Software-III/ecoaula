@@ -21,6 +21,9 @@
     <main id="contenido-principal" class="contenedor-principal" role="main" tabindex="-1">
         <h1>Registro y Perfil de Accesibilidad</h1>
 
+        <p>¿Tiene dificultades para usar esta página con su tecnología de asistencia?
+            <a th:href="@{/reportar-barrera(etapa='REGISTRO_MATRICULA')}">Reporte una barrera de accesibilidad</a>, sin necesidad de iniciar sesión.</p>
+
         <p>Complete el siguiente formulario en una sola columna para crear su cuenta y configurar cómo desea interactuar con la plataforma.</p>
 
         <!-- Resumen accesible de errores del formulario -->
@@ -98,6 +101,22 @@
                     </select>
                 </div>
 
+                <div class="grupo-campo">
+                    <label for="vozLectura">Voz para la lectura en voz alta</label>
+                    <span id="ayuda-voz" class="ayuda-campo">
+                        Se usa al pulsar "Leer en voz alta" en las lecciones. Las voces disponibles dependen de su navegador
+                        y sistema operativo. No cambia la voz de su lector de pantalla, que se configura en el propio lector.
+                    </span>
+                    <select id="vozLectura" name="vozLectura" aria-describedby="ayuda-voz"
+                            data-selector-voz th:attr="data-voz-actual=${form.vozLectura}">
+                        <option value="">Voz predeterminada del navegador</option>
+                        <option th:if="${form.vozLectura != null and !#strings.isEmpty(form.vozLectura)}"
+                                th:value="${form.vozLectura}" th:text="${form.vozLectura}" selected>Voz guardada</option>
+                    </select>
+                </div>
+                <button type="button" class="boton-secundario" hidden
+                        data-probar-voz="vozLectura" data-velocidad-desde="velocidadAudio">Probar voz y velocidad</button>
+
                 <fieldset>
                     <legend>Modo visual de contraste</legend>
                     <div class="opcion-seleccion">
@@ -134,5 +153,6 @@
         </form>
     </main>
 
+    <script th:src="@{/js/accesibilidad.js}" defer></script>
 </body>
 </html>

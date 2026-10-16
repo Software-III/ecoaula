@@ -37,6 +37,13 @@ public class PerfilAccesibilidad implements Serializable {
     @Column(nullable = false)
     private boolean soloAudio = false;
 
+    /**
+     * Nombre de la voz sintetizada preferida para leer en voz alta (la que ofrece el navegador o
+     * el sistema operativo del aprendiz). Null significa la voz predeterminada del navegador.
+     */
+    @Column(length = 200)
+    private String vozLectura;
+
     public PerfilAccesibilidad() {
     }
 
@@ -86,6 +93,14 @@ public class PerfilAccesibilidad implements Serializable {
 
     public void setTamanoTexto(TamanoTexto tamanoTexto) {
         this.tamanoTexto = tamanoTexto;
+    }
+
+    public String getVozLectura() {
+        return vozLectura;
+    }
+
+    public void setVozLectura(String vozLectura) {
+        this.vozLectura = vozLectura;
     }
 
     public boolean isSoloAudio() {

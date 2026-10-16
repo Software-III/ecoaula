@@ -33,6 +33,9 @@ public class Curso {
     @Column(nullable = false)
     private boolean activo = true;
 
+    /** Número máximo de aprendices matriculados; null significa sin límite. */
+    private Integer cupoMaximo;
+
     @OneToMany(mappedBy = "curso", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("orden ASC")
     private List<Contenido> contenidos = new ArrayList<>();
@@ -98,6 +101,14 @@ public class Curso {
 
     public void setModalidad(String modalidad) {
         this.modalidad = modalidad;
+    }
+
+    public Integer getCupoMaximo() {
+        return cupoMaximo;
+    }
+
+    public void setCupoMaximo(Integer cupoMaximo) {
+        this.cupoMaximo = cupoMaximo;
     }
 
     public boolean isActivo() {
