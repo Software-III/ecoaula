@@ -17,8 +17,10 @@
             </div>
             <nav class="navegacion-principal" role="navigation" aria-label="Navegación del curso">
                 <ul>
+                    <li><a th:href="@{/matriculas/{id}(id=${matricula.id})}">Mi avance en el curso</a></li>
                     <li><a th:href="@{/cursos}">Catálogo de Cursos</a></li>
                     <li><a th:href="@{/perfil}">Mi Perfil</a></li>
+                    <li><a th:href="@{/reportar-barrera(etapa='CONTENIDO', curso=${curso.id}, leccion=${leccion.id})}">Reportar una barrera en esta lección</a></li>
                 </ul>
             </nav>
         </div>
@@ -44,10 +46,18 @@
             <h2 id="seccion-audio-titulo" style="font-size: 1.25rem;">Audio explicativo de la lección</h2>
             <p>Utilice los controles nativos de su navegador para reproducir, pausar o ajustar el volumen del audio:</p>
             
-            <audio controls preload="metadata" style="margin-top: 0.5rem;">
-                <source th:src="@{/audio/{archivo}(archivo=${version.rutaAudio})}" type="audio/wav">
+            <audio controls preload="metadata" style="margin-top: 0.5rem;"
+                   th:attr="data-velocidad=${perfilAccesibilidad.velocidadAudio}, data-evento-url=@{/eventos/reproduccion}, data-curso=${curso.id}, data-leccion=${leccion.id}">
+                <source th:src="@{/audio/{archivo}(archivo=${version.rutaAudio})}"
+                        th:type="${#strings.endsWith(#strings.toLowerCase(version.rutaAudio), '.mp3')} ? 'audio/mpeg' : 'audio/wav'">
                 Su navegador no soporta la reproducción de audio nativo HTML5. Por favor utilice el enlace inferior para descargar la transcripción.
             </audio>
+
+            <p style="font-size: 0.95rem;">
+                Velocidad de reproducción configurada en su perfil:
+                <span th:text="${#numbers.formatDecimal(perfilAccesibilidad.velocidadAudio, 1, 2, 'POINT')} + 'x'">1.00x</span>.
+                Puede cambiarla en <a th:href="@{/perfil}">Mi Perfil</a>.
+            </p>
 
             <p style="font-size: 0.95rem; color: var(--color-texto-secundario);">
                 Versión del contenido consumida: <span th:text="'v' + ${version.numeroVersion}">v1</span> (ADR-08).
@@ -58,7 +68,14 @@
         <section aria-labelledby="seccion-transcripcion-titulo" class="transcripcion-caja">
             <h2 id="seccion-transcripcion-titulo" style="font-size: 1.25rem; margin-top: 0;">Transcripción de la lección</h2>
             
-            <div class="transcripcion-texto" th:text="${version.transcripcion}">
+            <p>
+                <button type="button" class="boton-secundario" hidden
+                        data-leer-en-voz="texto-transcripcion" data-estado="estado-lectura"
+                        th:attr="data-voz=${perfilAccesibilidad.vozLectura}, data-velocidad=${perfilAccesibilidad.velocidadAudio}">Leer en voz alta la transcripción</button>
+            </p>
+            <p id="estado-lectura" class="ayuda-campo" role="status" aria-live="polite"></p>
+
+            <div id="texto-transcripcion" class="transcripcion-texto" th:text="${version.transcripcion}">
                 Texto completo de la transcripción...
             </div>
 
@@ -68,6 +85,16 @@
                     📥 Descargar transcripción completa (.txt)
                 </a>
             </div>
+        </section>
+
+        <!-- Imágenes con alternativa textual (WCAG 1.1.1) -->
+        <section th:if="${!#lists.isEmpty(imagenes)}" aria-labelledby="seccion-imagenes-titulo" style="margin-top: 2rem;">
+            <h2 id="seccion-imagenes-titulo" style="font-size: 1.25rem;">Imágenes de la lección</h2>
+            <figure th:each="img, it : ${imagenes}" class="figura-leccion">
+                <img th:src="@{/imagenes/{archivo}(archivo=${img.rutaArchivo})}" th:alt="${img.textoAlternativo}">
+                <figcaption th:if="${img.descripcionDetallada != null}" style="white-space: pre-line;"
+                            th:text="'Descripción detallada de la imagen ' + ${it.count} + ': ' + ${img.descripcionDetallada}">Descripción</figcaption>
+            </figure>
         </section>
 
         <!-- Formulario de acción principal: Completar y avanzar -->
@@ -88,5 +115,6 @@
 
     </main>
 
+    <script th:src="@{/js/accesibilidad.js}" defer></script>
 </body>
 </html>

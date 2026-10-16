@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${titulo} + ' — EcoAula'">EcoAula</title>
+    <link rel="stylesheet" th:href="@{/css/ecoaula.css}">
+</head>
+<body th:class="${(perfilAccesibilidad != null and perfilAccesibilidad.modoVisual != null and perfilAccesibilidad.modoVisual.name() == 'ALTO_CONTRASTE' ? 'modo-alto-contraste ' : '') + (perfilAccesibilidad != null and perfilAccesibilidad.tamanoTexto != null and perfilAccesibilidad.tamanoTexto.name() == 'GRANDE' ? 'texto-grande ' : '') + (perfilAccesibilidad != null and perfilAccesibilidad.soloAudio ? 'solo-audio ' : '')}">
+
+    <a href="#contenido-principal" class="skip-link">Saltar al contenido principal</a>
+
+    <header class="encabezado-sitio" role="banner">
+        <div class="contenedor-principal">
+            <div style="font-size: 1.5rem; font-weight: bold;">EcoAula</div>
+            <nav class="navegacion-principal" role="navigation" aria-label="Navegación principal">
+                <ul>
+                    <li><a th:href="@{/cursos}">Catálogo de Cursos</a></li>
+                    <li sec:authorize="isAuthenticated()"><a th:href="@{/perfil}">Mi Perfil</a></li>
+                    <li sec:authorize="isAuthenticated()"><a th:href="@{/mis-reportes}">Mis reportes</a></li>
+                    <li sec:authorize="isAnonymous()"><a th:href="@{/registro}">Registrarme</a></li>
+                    <li sec:authorize="isAnonymous()"><a th:href="@{/login}">Iniciar Sesión</a></li>
+                    <li sec:authorize="isAuthenticated()">
+                        <form th:action="@{/logout}" method="post" style="display: inline;">
+                            <button type="submit" class="boton-secundario" style="min-height: 38px; padding: 0.25rem 0.75rem; font-size: 1rem;">Cerrar Sesión</button>
+                        </form>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main id="contenido-principal" class="contenedor-principal" role="main" tabindex="-1">
+        <h1>Reportar una barrera de accesibilidad</h1>
+
+        <p>
+            Cuéntenos qué le impidió usar la plataforma: un botón sin nombre, un audio que no se puede pausar, una imagen
+            sin descripción, un formulario que su lector de pantalla no anuncia… Su reporte nos ayuda a corregirlo.
+            Puede enviarlo aunque no haya iniciado sesión.
+        </p>
+
+        <div th:if="${#fields.hasErrors('${form.*}')}" class="resumen-errores" role="alert" tabindex="-1">
+            <h2>Por favor corrija los siguientes errores:</h2>
+            <ul>
+                <li th:each="err : ${#fields.errors('${form.*}')}" th:text="${err}">Error en el campo</li>
+            </ul>
+        </div>
+
+        <p th:if="${contexto != null}" class="tarjeta-curso"><strong>Lugar del reporte:</strong> <span th:text="${contexto}">Curso</span></p>
+
+        <form th:action="@{/reportar-barrera}" th:object="${form}" method="post" novalidate>
+            <input type="hidden" th:field="*{cursoId}">
+            <input type="hidden" th:field="*{contenidoId}">
+
+            <fieldset>
+                <legend>¿En qué parte de la plataforma encontró la barrera? (requerido)</legend>
+                <div th:each="e : ${etapas}" class="opcion-seleccion">
+                    <input type="radio" th:id="'etapa-' + ${e.name()}" th:field="*{etapa}" th:value="${e.name()}">
+                    <label th:for="'etapa-' + ${e.name()}" th:text="${e.descripcion}">Etapa</label>
+                </div>
+            </fieldset>
+
+            <div class="grupo-campo">
+                <label for="descripcion">¿Qué ocurrió? (requerido)</label>
+                <span id="ayuda-descripcion" class="ayuda-campo">Describa qué intentaba hacer y qué se lo impidió.</span>
+                <textarea id="descripcion" th:field="*{descripcion}" rows="6" required aria-describedby="ayuda-descripcion"
+                          th:attr="aria-invalid=${#fields.hasErrors('descripcion')}"></textarea>
+            </div>
+
+            <div class="grupo-campo">
+                <label for="tecnologiaAsistencia">Tecnología de asistencia que usaba (opcional)</label>
+                <span id="ayuda-tecnologia" class="ayuda-campo">Por ejemplo: NVDA con Firefox, JAWS, VoiceOver, ampliador de pantalla.</span>
+                <input type="text" id="tecnologiaAsistencia" th:field="*{tecnologiaAsistencia}" maxlength="200" aria-describedby="ayuda-tecnologia">
+            </div>
+
+            <div class="grupo-campo" sec:authorize="isAnonymous()">
+                <label for="correoContacto">Correo para responderle (opcional)</label>
+                <input type="email" id="correoContacto" th:field="*{correoContacto}" autocomplete="email"
+                       th:attr="aria-invalid=${#fields.hasErrors('correoContacto')}">
+            </div>
+
+            <button type="submit" class="boton-principal">Enviar reporte</button>
+        </form>
+    </main>
+
+</body>
+</html>

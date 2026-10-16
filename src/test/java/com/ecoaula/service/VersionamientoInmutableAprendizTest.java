@@ -37,6 +37,18 @@ class VersionamientoInmutableAprendizTest {
     @Mock
     private AprendizRepository aprendizRepository;
 
+    @Mock
+    private com.ecoaula.storage.AlmacenamientoContenido almacenamientoContenido;
+
+    @Mock
+    private com.ecoaula.repository.RevisionAccesibilidadRepository revisionRepository;
+
+    @Mock
+    private com.ecoaula.repository.RecursoImagenRepository imagenRepository;
+
+    @Mock
+    private com.ecoaula.repository.MatriculaRepository matriculaRepository;
+
     private ContenidoService contenidoService;
 
     private Contenido leccion;
@@ -51,7 +63,11 @@ class VersionamientoInmutableAprendizTest {
                 contenidoRepository,
                 versionRepository,
                 avanceRepository,
-                aprendizRepository
+                aprendizRepository,
+                almacenamientoContenido,
+                revisionRepository,
+                imagenRepository,
+                matriculaRepository
         );
 
         Curso curso = new Curso("Curso Demo", "Desc", 10, "Area", "Virtual");

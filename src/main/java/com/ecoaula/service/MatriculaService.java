@@ -1,6 +1,7 @@
 package com.ecoaula.service;
 
 import com.ecoaula.exception.AccesoDenegadoException;
+import com.ecoaula.exception.EcoAulaException;
 import com.ecoaula.exception.MatriculaDuplicadaException;
 import com.ecoaula.exception.RecursoNoEncontradoException;
 import com.ecoaula.model.Aprendiz;
@@ -43,11 +44,19 @@ public class MatriculaService {
         Aprendiz aprendiz = aprendizRepository.findByCorreo(correoAprendiz)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Aprendiz no encontrado con correo: " + correoAprendiz));
 
-        Curso curso = cursoRepository.findById(cursoId)
+        Curso curso = cursoRepository.findByIdParaMatricular(cursoId)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Curso no encontrado con ID: " + cursoId));
+
+        if (!curso.isActivo()) {
+            throw new EcoAulaException("El curso " + curso.getTitulo() + " no está disponible para matrículas nuevas.");
+        }
 
         if (matriculaRepository.existsByAprendizIdAndCursoId(aprendiz.getId(), curso.getId())) {
             throw new MatriculaDuplicadaException("Ya se encuentra matriculado en el curso: " + curso.getTitulo());
+        }
+
+        if (curso.getCupoMaximo() != null && matriculaRepository.countByCursoId(curso.getId()) >= curso.getCupoMaximo()) {
+            throw new EcoAulaException("El curso " + curso.getTitulo() + " no tiene cupos disponibles.");
         }
 
         try {
@@ -70,6 +79,23 @@ public class MatriculaService {
         }
 
         return matricula;
+    }
+
+    /**
+     * Cupos disponibles del curso, o null si no tiene límite.
+     */
+    @Transactional(readOnly = true)
+    public Long cuposDisponibles(Curso curso) {
+        if (curso.getCupoMaximo() == null) {
+            return null;
+        }
+        return Math.max(0, curso.getCupoMaximo() - matriculaRepository.countByCursoId(curso.getId()));
+    }
+
+    @Transactional(readOnly = true)
+    public Matricula obtenerPorAprendizYCurso(String correoAprendiz, Long cursoId) {
+        return matriculaRepository.findByAprendizCorreoAndCursoId(correoAprendiz, cursoId)
+                .orElseThrow(() -> new AccesoDenegadoException("Debe matricularse en el curso para acceder a sus lecciones."));
     }
 
     @Transactional(readOnly = true)

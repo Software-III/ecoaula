@@ -45,6 +45,18 @@ class GestionContenidoServiceTest {
     @Mock
     private ValidadorAudioService validadorAudioService;
 
+    @Mock
+    private com.ecoaula.repository.MatriculaRepository matriculaRepository;
+
+    @Mock
+    private com.ecoaula.repository.EvaluacionRepository evaluacionRepository;
+
+    @Mock
+    private com.ecoaula.repository.RecursoImagenRepository imagenRepository;
+
+    @Mock
+    private com.ecoaula.service.ContenidoService contenidoService;
+
     private GestionContenidoService gestionService;
 
     private Aprendiz gestor;
@@ -59,7 +71,11 @@ class GestionContenidoServiceTest {
                 contenidoRepository,
                 versionRepository,
                 aprendizRepository,
-                validadorAudioService
+                validadorAudioService,
+                matriculaRepository,
+                evaluacionRepository,
+                imagenRepository,
+                contenidoService
         );
 
         gestor = new Aprendiz();
@@ -74,6 +90,8 @@ class GestionContenidoServiceTest {
 
         curso = new Curso("Curso Accesible", "Desc", 10, "Tecnologia", "Virtual");
         curso.setId(1L);
+        // Las lecciones solo se agregan con el curso fuera del catálogo y sin matriculados
+        curso.setActivo(false);
 
         leccion = new Contenido("Lección 1", 1, curso);
         leccion.setId(100L);
@@ -192,6 +210,9 @@ class GestionContenidoServiceTest {
         borrador.setEstado(EstadoContenido.BORRADOR);
         borrador.setRutaAudio("audio.wav");
         borrador.setTranscripcion("Texto transcrito fielmente");
+        // Fuente del material y licencia declarada (Ley 23 de 1982), requeridas para enviar a revisión
+        borrador.setFuenteMaterial("Elaboración propia");
+        borrador.setLicenciaDeclaradaEn(java.time.LocalDateTime.now());
 
         when(aprendizRepository.findByCorreo("gestor@ecoaula.local")).thenReturn(Optional.of(gestor));
         when(versionRepository.findById(504L)).thenReturn(Optional.of(borrador));

@@ -22,6 +22,10 @@ public interface AvanceLeccionRepository extends JpaRepository<AvanceLeccion, Lo
     @Query("SELECT a FROM AvanceLeccion a WHERE a.aprendiz.id = :aprendizId AND a.contenidoVersion.contenido.id = :contenidoId")
     Optional<AvanceLeccion> findByAprendizIdAndContenidoId(@Param("aprendizId") Long aprendizId, @Param("contenidoId") Long contenidoId);
 
+    @Query("SELECT a.contenidoVersion.contenido.id FROM AvanceLeccion a " +
+           "WHERE a.aprendiz.correo = :correo AND a.contenidoVersion.contenido.curso.id = :cursoId")
+    List<Long> findLeccionesCompletadasEnCurso(@Param("correo") String correo, @Param("cursoId") Long cursoId);
+
     @Query("SELECT COUNT(a) FROM AvanceLeccion a WHERE a.aprendiz.id = :aprendizId AND a.contenidoVersion.contenido.curso.id = :cursoId")
     long contarLeccionesCompletadasEnCurso(@Param("aprendizId") Long aprendizId, @Param("cursoId") Long cursoId);
 }

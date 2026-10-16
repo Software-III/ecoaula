@@ -2,7 +2,10 @@ package com.ecoaula.controller.dto;
 
 import com.ecoaula.model.enums.ModoVisual;
 import com.ecoaula.model.enums.TamanoTexto;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 /**
  * Formulario DTO para edición de preferencias de accesibilidad en /perfil.
@@ -10,7 +13,12 @@ import jakarta.validation.constraints.NotNull;
 public class PerfilForm {
 
     @NotNull(message = "Seleccione la velocidad de audio deseada")
+    @DecimalMin(value = "0.5", message = "La velocidad mínima de reproducción es 0.5x")
+    @DecimalMax(value = "2.0", message = "La velocidad máxima de reproducción es 2.0x")
     private Double velocidadAudio = 1.0;
+
+    @Size(max = 200, message = "El nombre de la voz admite máximo 200 caracteres")
+    private String vozLectura;
 
     @NotNull(message = "Seleccione el modo visual")
     private ModoVisual modoVisual = ModoVisual.ESTANDAR;
@@ -47,7 +55,15 @@ public class PerfilForm {
         this.tamanoTexto = tamanoTexto;
     }
 
-    public boolean isSoloAudio() {
+    public String getVozLectura() {
+        return vozLectura;
+    }
+
+    public void setVozLectura(String vozLectura) {
+        this.vozLectura = vozLectura;
+    }
+
+        public boolean isSoloAudio() {
         return soloAudio;
     }
 

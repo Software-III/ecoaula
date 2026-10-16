@@ -19,6 +19,7 @@
                 <ul>
                     <li><a th:href="@{/cursos}">Catálogo de Cursos</a></li>
                     <li><a th:href="@{/perfil}">Mi Perfil</a></li>
+                    <li><a th:href="@{/reportar-barrera(etapa='CONTENIDO', curso=${curso.id})}">Reportar una barrera</a></li>
                 </ul>
             </nav>
         </div>
@@ -26,13 +27,46 @@
 
     <main id="contenido-principal" class="contenedor-principal" role="main" tabindex="-1">
 
-        <div class="alerta alerta-exito" role="status" aria-live="polite">
+        <!-- Solo justo después de matricularse (atributo flash de la acción de matrícula) -->
+        <div th:if="${matriculaRecienCreada}" class="alerta alerta-exito" role="status" aria-live="polite">
             ¡Su matrícula ha sido registrada con éxito! Ya tiene acceso completo al contenido del curso.
         </div>
 
-        <h1 th:text="'Matrícula Confirmada: ' + ${curso.titulo}">Matrícula Confirmada</h1>
+        <h1 th:text="(${esConfirmacion} ? 'Matrícula Confirmada: ' : 'Mi curso: ') + ${curso.titulo}">Matrícula Confirmada</h1>
 
-        <section aria-labelledby="seccion-resumen" class="tarjeta-curso">
+        <!-- Siguiente paso según el avance del aprendiz -->
+        <section aria-labelledby="seccion-siguiente" class="tarjeta-curso">
+            <h2 id="seccion-siguiente" style="margin-top: 0;">Su avance</h2>
+            <p style="font-size: 1.15rem; font-weight: bold;"
+               th:text="${avance.completadas()} + ' de ' + ${avance.total()} + ' lecciones completadas.'">0 de 3 lecciones completadas.</p>
+
+            <th:block th:with="siguiente=${avance.siguientePendiente()}">
+                <p th:if="${certificado != null}">Aprobó la evaluación final y su certificado ya fue emitido.</p>
+                <p th:if="${certificado == null and avance.todasCompletadas()}">Completó todas las lecciones. Ya puede presentar la evaluación final.</p>
+
+                <a th:if="${certificado != null}" th:href="@{/certificados/{id}(id=${certificado.id})}" class="boton-principal">Ver mi certificado</a>
+                <a th:if="${certificado == null and avance.todasCompletadas()}" th:href="@{/matriculas/{id}/evaluacion(id=${matricula.id})}"
+                   class="boton-principal">Presentar evaluación final</a>
+                <a th:if="${certificado == null and siguiente != null and avance.sinIniciar()}"
+                   th:href="@{/cursos/{c}/lecciones/{n}(c=${curso.id}, n=${siguiente.orden()})}" class="boton-principal">Comenzar curso</a>
+                <a th:if="${certificado == null and siguiente != null and !avance.sinIniciar()}"
+                   th:href="@{/cursos/{c}/lecciones/{n}(c=${curso.id}, n=${siguiente.orden()})}" class="boton-principal"
+                   th:text="'Continuar con la lección ' + ${siguiente.orden()} + ': ' + ${siguiente.titulo()}">Continuar</a>
+            </th:block>
+        </section>
+
+        <!-- Lecciones del curso con su estado (texto, no solo color) -->
+        <section aria-labelledby="seccion-lecciones" style="margin-top: 2rem;">
+            <h2 id="seccion-lecciones">Lecciones del curso</h2>
+            <ol>
+                <li th:each="l : ${avance.lecciones()}" style="margin-bottom: 0.5rem;">
+                    <a th:href="@{/cursos/{c}/lecciones/{n}(c=${curso.id}, n=${l.orden()})}" th:text="${l.titulo()}">Lección</a>
+                    <span th:text="${l.completada()} ? ' (completada)' : ' (pendiente)'"> (pendiente)</span>
+                </li>
+            </ol>
+        </section>
+
+        <section aria-labelledby="seccion-resumen" class="tarjeta-curso" style="margin-top: 2rem;">
             <h2 id="seccion-resumen" style="margin-top: 0;">Resumen del curso</h2>
             <ul>
                 <li><strong>Curso:</strong> <span th:text="${curso.titulo}">Fundamentos de Ofimática</span></li>
@@ -43,20 +77,17 @@
             </ul>
         </section>
 
-        <section aria-labelledby="seccion-pasos" style="margin-top: 2rem;">
+        <section th:if="${esConfirmacion}" aria-labelledby="seccion-pasos" style="margin-top: 2rem;">
             <h2 id="seccion-pasos">Próximos pasos</h2>
             <ol>
                 <li><strong>Consumir las lecciones:</strong> Cada lección cuenta con audio nativo y transcripción completa para lectura o descarga en texto (.txt).</li>
-                <li><strong>Completar el 100% del contenido:</strong> Debe marcar cada lección como completada para registrar su avance de aprendizaje.</li>
+                <li><strong>Completar el 100% del contenido:</strong> Debe marcar cada lección como completada para registrar su avance de aprendizaje. Su avance se guarda y puede continuar donde lo dejó.</li>
                 <li><strong>Presentar la evaluación final:</strong> Al finalizar todas las lecciones se habilitará el cuestionario accesible de opción múltiple.</li>
                 <li><strong>Obtener su certificado:</strong> Al aprobar la evaluación con el 70% o más, se emitirá su certificado verificable con código único.</li>
             </ol>
         </section>
 
-        <div style="margin-top: 2.5rem; display: flex; flex-direction: column; gap: 1rem; max-width: 400px;">
-            <a th:href="@{/cursos/{id}/lecciones/1(id=${curso.id})}" class="boton-principal">Comenzar curso</a>
-            <a th:href="@{/cursos}" class="boton-secundario">Volver al catálogo de cursos</a>
-        </div>
+        <p style="margin-top: 2rem;"><a th:href="@{/cursos}">Volver al catálogo de cursos</a></p>
 
     </main>
 

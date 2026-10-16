@@ -10,7 +10,11 @@ import com.ecoaula.model.enums.CriterioAccesibilidad;
 import com.ecoaula.model.enums.EstadoContenido;
 import com.ecoaula.model.enums.ResultadoRevision;
 import com.ecoaula.model.enums.Rol;
+import com.ecoaula.model.Curso;
+import com.ecoaula.notification.NotificacionService;
 import com.ecoaula.repository.AprendizRepository;
+import com.ecoaula.repository.ContenidoRepository;
+import com.ecoaula.repository.MatriculaRepository;
 import com.ecoaula.repository.ContenidoVersionRepository;
 import com.ecoaula.repository.RevisionAccesibilidadRepository;
 import com.ecoaula.service.dto.IndicadoresCalidad;
@@ -32,13 +36,22 @@ public class RevisionContenidoService {
     private final ContenidoVersionRepository versionRepository;
     private final RevisionAccesibilidadRepository revisionRepository;
     private final AprendizRepository aprendizRepository;
+    private final ContenidoRepository contenidoRepository;
+    private final MatriculaRepository matriculaRepository;
+    private final NotificacionService notificacionService;
 
     public RevisionContenidoService(ContenidoVersionRepository versionRepository,
                                     RevisionAccesibilidadRepository revisionRepository,
-                                    AprendizRepository aprendizRepository) {
+                                    AprendizRepository aprendizRepository,
+                                    ContenidoRepository contenidoRepository,
+                                    MatriculaRepository matriculaRepository,
+                                    NotificacionService notificacionService) {
         this.versionRepository = versionRepository;
         this.revisionRepository = revisionRepository;
         this.aprendizRepository = aprendizRepository;
+        this.contenidoRepository = contenidoRepository;
+        this.matriculaRepository = matriculaRepository;
+        this.notificacionService = notificacionService;
     }
 
     /**
@@ -47,7 +60,15 @@ public class RevisionContenidoService {
      */
     @Transactional(readOnly = true)
     public List<ContenidoVersion> obtenerColaRevision() {
-        return versionRepository.findByEstadoOrderByEnviadaARevisionEnAsc(EstadoContenido.EN_REVISION);
+        // Con lección, curso, autor y origen cargados: la vista los lee fuera de la transacción
+        return versionRepository.findConDetalleByEstadoOrderByEnviadaARevisionEnAsc(EstadoContenido.EN_REVISION);
+    }
+
+    /** Versión con su lección, curso, autor y origen, para la vista de auditoría. */
+    @Transactional(readOnly = true)
+    public ContenidoVersion obtenerVersionDetalle(Long versionId) {
+        return versionRepository.findDetalleById(versionId)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Versión no encontrada con ID: " + versionId));
     }
 
     @Transactional(readOnly = true)
@@ -75,6 +96,10 @@ public class RevisionContenidoService {
             throw new ReglaNegocioException("No se puede aprobar la publicación: todos los criterios de la lista de chequeo de accesibilidad deben estar marcados como conformes.");
         }
 
+        // Bloquea la lección mientras cambia su versión vigente: dos aprobaciones simultáneas
+        // no pueden dejar dos versiones PUBLICADAS (ADR-08)
+        contenidoRepository.findByIdParaActualizar(version.getContenido().getId());
+
         // ADR-08: Retirar versión publicada anterior si existe
         Optional<ContenidoVersion> versionPublicadaAnterior = versionRepository.findByContenidoIdAndEstado(
                 version.getContenido().getId(),
@@ -99,8 +124,37 @@ public class RevisionContenidoService {
                 null,
                 itemsChequeados
         );
+        RevisionAccesibilidad guardada = revisionRepository.save(revision);
 
-        return revisionRepository.save(revision);
+        // Contenido nuevo en un curso del catálogo: se avisa a los aprendices matriculados
+        Curso curso = version.getContenido().getCurso();
+        if (curso != null && curso.isActivo() && versionPublicadaAnterior.isPresent()) {
+            matriculaRepository.findByCursoId(curso.getId()).forEach(m ->
+                    notificacionService.notificarContenidoActualizado(m.getAprendiz().getCorreo(), curso.getTitulo(),
+                            version.getContenido().getTitulo(), version.getNumeroVersion()));
+        }
+        return guardada;
+    }
+
+    // ------------------------------------------------------------------
+    // Informes de revisión de accesibilidad (salida del Proceso 2)
+    // ------------------------------------------------------------------
+
+    @Transactional(readOnly = true)
+    public List<RevisionAccesibilidad> listarInformes() {
+        return revisionRepository.findConDetalleByOrderByFechaDesc();
+    }
+
+    @Transactional(readOnly = true)
+    public RevisionAccesibilidad obtenerInforme(Long informeId) {
+        return revisionRepository.findDetalleById(informeId)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Informe de revisión no encontrado: " + informeId));
+    }
+
+    /** Revisiones anteriores de la lección, a través de todas sus versiones (incluidas las subsanaciones). */
+    @Transactional(readOnly = true)
+    public List<RevisionAccesibilidad> historialDeLeccion(Long contenidoId) {
+        return revisionRepository.findByVersionContenidoIdOrderByFechaAsc(contenidoId);
     }
 
     /**
@@ -145,8 +199,10 @@ public class RevisionContenidoService {
     public IndicadoresCalidad calcularIndicadores() {
         List<RevisionAccesibilidad> todasRevisiones = revisionRepository.findAllByOrderByFechaDesc();
 
-        // Agrupar revisiones por versión (id)
+        // Agrupar revisiones por versión (id). Una subsanación (versión creada desde una rechazada) es el mismo
+        // contenido revisado otra vez: no cuenta como "aprobada en primera revisión" (Plan de Calidad, 3.3.2)
         Map<Long, List<RevisionAccesibilidad>> revisionesPorVersion = todasRevisiones.stream()
+                .filter(r -> r.getVersion().getVersionOrigen() == null)
                 .collect(Collectors.groupingBy(r -> r.getVersion().getId()));
 
         long totalVersionesRevisadas = revisionesPorVersion.size();

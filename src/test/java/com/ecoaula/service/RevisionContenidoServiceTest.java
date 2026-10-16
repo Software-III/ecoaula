@@ -42,6 +42,15 @@ class RevisionContenidoServiceTest {
     @Mock
     private AprendizRepository aprendizRepository;
 
+    @Mock
+    private com.ecoaula.repository.ContenidoRepository contenidoRepository;
+
+    @Mock
+    private com.ecoaula.repository.MatriculaRepository matriculaRepository;
+
+    @Mock
+    private com.ecoaula.notification.NotificacionService notificacionService;
+
     private RevisionContenidoService revisionService;
 
     private Aprendiz gestorAutor;
@@ -55,7 +64,10 @@ class RevisionContenidoServiceTest {
         revisionService = new RevisionContenidoService(
                 versionRepository,
                 revisionRepository,
-                aprendizRepository
+                aprendizRepository,
+                contenidoRepository,
+                matriculaRepository,
+                notificacionService
         );
 
         gestorAutor = new Aprendiz();
@@ -228,5 +240,30 @@ class RevisionContenidoServiceTest {
         assertEquals(1, ind.getAprobadasPrimeraRevision());
         assertEquals(50.0, ind.getTasaAccesibilidadPrimeraRevision());
         assertEquals(3.0, ind.getTiempoPromedioPublicacionHoras(), 0.1); // (2h + 4h)/2 = 3h
+    }
+
+    @Test
+    @DisplayName("Una subsanación es el mismo contenido revisado otra vez: no cuenta como aprobada en primera revisión")
+    void subsanacionNoCuentaComoPrimeraRevision() {
+        ContenidoVersion v1 = new ContenidoVersion(leccion, 1, gestorAutor);
+        v1.setId(1L);
+        v1.setEstado(EstadoContenido.RECHAZADA);
+
+        ContenidoVersion v2 = new ContenidoVersion(leccion, 2, gestorAutor);
+        v2.setId(2L);
+        v2.setVersionOrigen(v1);
+        v2.setEstado(EstadoContenido.PUBLICADA);
+
+        RevisionAccesibilidad rechazoV1 = new RevisionAccesibilidad(v1, revisor, ResultadoRevision.RECHAZADA, "Falla", Collections.emptySet());
+        RevisionAccesibilidad aprobacionV2 = new RevisionAccesibilidad(v2, revisor, ResultadoRevision.APROBADA, null, checklistCompleto);
+        when(revisionRepository.findAllByOrderByFechaDesc()).thenReturn(Arrays.asList(aprobacionV2, rechazoV1));
+        when(versionRepository.findByEstado(EstadoContenido.PUBLICADA)).thenReturn(Collections.emptyList());
+        when(versionRepository.findByEstado(EstadoContenido.RETIRADA)).thenReturn(Collections.emptyList());
+
+        IndicadoresCalidad ind = revisionService.calcularIndicadores();
+
+        assertEquals(1, ind.getTotalVersionesRevisadas());
+        assertEquals(0, ind.getAprobadasPrimeraRevision());
+        assertEquals(0.0, ind.getTasaAccesibilidadPrimeraRevision());
     }
 }

@@ -1,9 +1,10 @@
 package com.ecoaula.controller;
 
+import com.ecoaula.exception.EcoAulaException;
+import com.ecoaula.service.ContenidoService;
 import com.ecoaula.model.ContenidoVersion;
 import com.ecoaula.model.enums.CriterioAccesibilidad;
 import com.ecoaula.service.RevisionContenidoService;
-import com.ecoaula.service.dto.IndicadoresCalidad;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -24,9 +25,11 @@ import java.util.Set;
 public class RevisorAccesibilidadController {
 
     private final RevisionContenidoService revisionContenidoService;
+    private final ContenidoService contenidoService;
 
-    public RevisorAccesibilidadController(RevisionContenidoService revisionContenidoService) {
+    public RevisorAccesibilidadController(RevisionContenidoService revisionContenidoService, ContenidoService contenidoService) {
         this.revisionContenidoService = revisionContenidoService;
+        this.contenidoService = contenidoService;
     }
 
     /**
@@ -45,11 +48,14 @@ public class RevisorAccesibilidadController {
      */
     @GetMapping("/versiones/{versionId}/revisar")
     public String detalleRevision(@PathVariable("versionId") Long versionId, Model model) {
-        ContenidoVersion version = revisionContenidoService.obtenerVersionParaRevision(versionId);
-
+        ContenidoVersion version = revisionContenidoService.obtenerVersionDetalle(versionId);
+        Long contenidoId = version.getContenido().getId();
         model.addAttribute("titulo", "Auditar Accesibilidad — Versión " + version.getNumeroVersion() + " (" + version.getContenido().getTitulo() + ")");
         model.addAttribute("version", version);
         model.addAttribute("criterios", CriterioAccesibilidad.todos());
+        model.addAttribute("imagenes", contenidoService.listarImagenes(versionId));
+        model.addAttribute("vigente", contenidoService.obtenerVersionVigente(contenidoId).orElse(null));
+        model.addAttribute("historial", revisionContenidoService.historialDeLeccion(contenidoId));
         return "revisor/detalle";
     }
 
@@ -65,8 +71,13 @@ public class RevisorAccesibilidadController {
             criterios = new HashSet<>();
         }
 
-        revisionContenidoService.aprobarYPublicar(versionId, principal.getName(), criterios);
-
+        try {
+            revisionContenidoService.aprobarYPublicar(versionId, principal.getName(), criterios);
+        } catch (EcoAulaException ex) {
+            redirectAttributes.addFlashAttribute("mensajeError", ex.getMessage());
+            redirectAttributes.addFlashAttribute("criteriosMarcados", criterios);
+            return "redirect:/revisor/versiones/" + versionId + "/revisar#seccion-chequeo";
+        }
         redirectAttributes.addFlashAttribute("mensajeExito", "La versión ha sido APROBADA y PUBLICADA exitosamente. Los aprendices ya pueden acceder a ella.");
         return "redirect:/revisor/cola";
     }
@@ -84,8 +95,13 @@ public class RevisorAccesibilidadController {
             criterios = new HashSet<>();
         }
 
-        revisionContenidoService.rechazar(versionId, principal.getName(), motivo, criterios);
-
+        try {
+            revisionContenidoService.rechazar(versionId, principal.getName(), motivo, criterios);
+        } catch (EcoAulaException ex) {
+            redirectAttributes.addFlashAttribute("mensajeError", ex.getMessage());
+            redirectAttributes.addFlashAttribute("criteriosMarcados", criterios);
+            return "redirect:/revisor/versiones/" + versionId + "/revisar#seccion-chequeo";
+        }
         redirectAttributes.addFlashAttribute("mensajeExito", "La versión ha sido RECHAZADA. Se ha registrado el motivo para que el gestor proceda con la subsanación.");
         return "redirect:/revisor/cola";
     }
@@ -93,11 +109,9 @@ public class RevisorAccesibilidadController {
     /**
      * Pantalla 4: Indicadores del Plan de Calidad de Accesibilidad.
      */
+    /** Los indicadores del revisor se integraron al tablero de calidad de los Procesos 1 y 2. */
     @GetMapping("/indicadores")
-    public String verIndicadores(Model model) {
-        IndicadoresCalidad indicadores = revisionContenidoService.calcularIndicadores();
-        model.addAttribute("titulo", "Indicadores de Calidad de Accesibilidad");
-        model.addAttribute("indicadores", indicadores);
-        return "revisor/indicadores";
+    public String verIndicadores() {
+        return "redirect:/indicadores";
     }
 }

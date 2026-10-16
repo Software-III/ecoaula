@@ -9,5 +9,7 @@ public interface NotificacionService {
 
     void notificarMatricula(String correo, String nombreCurso);
 
+    void notificarContenidoActualizado(String correo, String nombreCurso, String tituloLeccion, int numeroVersion);
+
     void notificarEmisionCertificado(String correo, String nombreCurso, String codigoVerificacion);
 }

@@ -18,6 +18,9 @@
             <nav class="navegacion-principal" role="navigation" aria-label="Navegación principal">
                 <ul>
                     <li><a th:href="@{/gestor/cursos}">Mis Cursos y Contenidos</a></li>
+                    <li><a th:href="@{/informes-revision}">Informes de revisión</a></li>
+                    <li><a th:href="@{/reportes-barrera}">Reportes de barreras</a></li>
+                    <li><a th:href="@{/indicadores}">Indicadores</a></li>
                     <li><a th:href="@{/perfil}">Mi Perfil</a></li>
                 </ul>
             </nav>
@@ -40,7 +43,8 @@
         <!-- Vista previa del audio nativo si ya fue subido -->
         <section aria-labelledby="seccion-audio-actual" class="seccion-audio" th:if="${version.rutaAudio != null and !version.rutaAudio.isBlank()}">
             <h2 id="seccion-audio-actual" style="font-size: 1.25rem;">Vista Previa del Audio Cargado</h2>
-            <audio controls th:src="@{/audio/{archivo}(archivo=${version.rutaAudio})}" preload="metadata">
+            <audio controls th:src="@{/audio/{archivo}(archivo=${version.rutaAudio})}" preload="metadata"
+                   th:attr="data-velocidad=${perfilAccesibilidad.velocidadAudio}">
                 Su navegador no soporta el elemento nativo de reproducción de audio.
             </audio>
             <p style="font-size: 0.95rem; color: var(--color-texto-secundario);">
@@ -48,7 +52,7 @@
             </p>
         </section>
 
-        <form th:action="@{/gestor/versiones/{id}/editar(id=${version.id})}"
+        <form id="form-borrador" th:action="@{/gestor/versiones/{id}/editar(id=${version.id})}"
               th:object="${borradorForm}"
               method="post"
               enctype="multipart/form-data"
@@ -70,31 +74,97 @@
                 <textarea id="transcripcion" th:field="*{transcripcion}" rows="12" required aria-describedby="ayuda-transcripcion"></textarea>
             </div>
 
+            <fieldset>
+                <legend>Material fuente y derechos de autor (Ley 23 de 1982)</legend>
+                <div class="grupo-campo">
+                    <label for="fuenteMaterial">Fuente del material y licencia o autorización de uso (requerida para enviar a revisión)</label>
+                    <div class="ayuda-campo" id="ayuda-fuente">
+                        Indique de dónde proviene el material (autor, obra, enlace) y bajo qué licencia o autorización se usa.
+                        Por ejemplo: "Elaboración propia" o "Guía de ofimática, autor X, licencia Creative Commons BY 4.0".
+                    </div>
+                    <textarea id="fuenteMaterial" th:field="*{fuenteMaterial}" rows="3" aria-describedby="ayuda-fuente"></textarea>
+                </div>
+                <div class="opcion-seleccion">
+                    <input type="checkbox" id="licenciaDeclarada" th:field="*{licenciaDeclarada}">
+                    <label for="licenciaDeclarada">Declaro que el material fuente de esta versión cuenta con licencia o autorización de uso.</label>
+                </div>
+            </fieldset>
+
             <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1.5rem; align-items: center;">
                 <button type="submit" class="boton-principal">Guardar Cambios del Borrador</button>
                 <a th:href="@{/gestor/lecciones/{id}/versiones(id=${version.contenido.id})}" class="boton-secundario">Regresar al Historial</a>
             </div>
         </form>
 
+        <!-- Imágenes con alternativa textual (WCAG 1.1.1) -->
+        <section id="seccion-imagenes" aria-labelledby="titulo-imagenes" style="margin-top: 3rem; border-top: 2px solid var(--color-borde); padding-top: 1.5rem;">
+            <h2 id="titulo-imagenes" style="font-size: 1.3rem;" th:text="'Imágenes de la lección (' + ${#lists.size(imagenes)} + ')'">Imágenes</h2>
+            <p th:if="${#lists.isEmpty(imagenes)}">Esta versión no tiene imágenes.</p>
+            <ul class="lista-cursos">
+                <li th:each="img, it : ${imagenes}" class="tarjeta-curso">
+                    <figure class="figura-leccion">
+                        <img th:src="@{/imagenes/{archivo}(archivo=${img.rutaArchivo})}" th:alt="${img.textoAlternativo}">
+                        <figcaption>
+                            <strong th:text="'Imagen ' + ${it.count} + '. Texto alternativo: '">Imagen 1. Texto alternativo: </strong>
+                            <span th:text="${img.textoAlternativo}">Texto alternativo</span>
+                            <span th:if="${img.descripcionDetallada != null}" style="display: block; white-space: pre-line; margin-top: 0.5rem;"
+                                  th:text="'Descripción detallada: ' + ${img.descripcionDetallada}">Descripción</span>
+                        </figcaption>
+                    </figure>
+                    <form th:if="${version.esBorrador()}" th:action="@{/gestor/versiones/{v}/imagenes/{i}/quitar(v=${version.id}, i=${img.id})}" method="post">
+                        <button type="submit" class="boton-secundario"
+                                th:attr="aria-label='Quitar la imagen ' + ${it.count} + ': ' + ${img.textoAlternativo}">Quitar imagen</button>
+                    </form>
+                </li>
+            </ul>
+            <form th:if="${version.esBorrador()}" th:action="@{/gestor/versiones/{id}/imagenes(id=${version.id})}" method="post" enctype="multipart/form-data">
+                <fieldset>
+                    <legend>Agregar imagen</legend>
+                    <div class="grupo-campo">
+                        <label for="imagen">Archivo de imagen (PNG, JPEG o WebP)</label>
+                        <input type="file" id="imagen" name="imagen" accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp" required>
+                    </div>
+                    <div class="grupo-campo">
+                        <label for="textoAlternativo" th:text="'Texto alternativo (requerido, máximo ' + ${maxTextoAlternativo} + ' caracteres)'">Texto alternativo</label>
+                        <div class="ayuda-campo" id="ayuda-alt">Describa qué transmite la imagen, no cómo se ve. Evite empezar con "imagen de".</div>
+                        <input type="text" id="textoAlternativo" name="textoAlternativo" required
+                               th:attr="maxlength=${maxTextoAlternativo}" aria-describedby="ayuda-alt" th:value="${textoAlternativo}">
+                    </div>
+                    <div class="grupo-campo">
+                        <label for="descripcionDetallada">Descripción detallada (opcional)</label>
+                        <div class="ayuda-campo" id="ayuda-descripcion">Para gráficos, tablas o diagramas: explique todos los datos que contienen, por ejemplo fila por fila.</div>
+                        <textarea id="descripcionDetallada" name="descripcionDetallada" rows="5" aria-describedby="ayuda-descripcion"
+                                  th:text="${descripcionDetallada}"></textarea>
+                    </div>
+                </fieldset>
+                <button type="submit" class="boton-secundario">Agregar imagen</button>
+            </form>
+        </section>
+
         <!-- Bloque independiente para Enviar a Revisión cuando cumple los requisitos -->
-        <section aria-labelledby="seccion-envio-revision" style="margin-top: 3rem; border-top: 2px solid var(--color-borde); padding-top: 1.5rem;">
-            <h2 id="seccion-envio-revision" style="font-size: 1.3rem;">Finalizar y Enviar a Revisión Técnica</h2>
+        <section id="seccion-envio-revision" aria-labelledby="seccion-envio-revision-titulo" style="margin-top: 3rem; border-top: 2px solid var(--color-borde); padding-top: 1.5rem;">
+            <h2 id="seccion-envio-revision-titulo" style="font-size: 1.3rem;">Finalizar y Enviar a Revisión Técnica</h2>
+            <p>Además del audio y la transcripción, debe registrar la fuente del material y declarar su licencia (Ley 23 de 1982).</p>
 
             <div th:if="${version.tieneAudioYTranscripcion()}" class="alerta alerta-exito" role="status">
                 <strong>✓ Requisitos mínimos completos:</strong> La versión cuenta con audio cargado y transcripción. Puede enviarla a revisión técnica de accesibilidad.
             </div>
 
             <div th:unless="${version.tieneAudioYTranscripcion()}" class="alerta alerta-error" role="status">
-                <strong>Pendiente:</strong> Debe subir un archivo de audio y guardar la transcripción antes de poder habilitar el envío a revisión técnica.
+                <strong>Pendiente:</strong> La versión aún no tiene audio y transcripción guardados.
             </div>
-
-            <form th:if="${version.tieneAudioYTranscripcion()}" th:action="@{/gestor/versiones/{id}/enviar-revision(id=${version.id})}" method="post">
-                <button type="submit" class="boton-principal" style="background-color: var(--color-primario);">
-                    ✓ Enviar esta versión a Revisión Técnica
-                </button>
-            </form>
+            <p>
+                El botón guarda primero todo lo que haya escrito o marcado en el formulario (transcripción, audio, fuente y licencia)
+                y luego envía la versión a revisión. Si falta algún requisito, se lo indicará sin perder los cambios.
+            </p>
+            <!-- Pertenece al formulario del borrador (atributo form): así no se pierden los cambios sin guardar -->
+            <button th:if="${version.esBorrador()}" type="submit" form="form-borrador" name="accion" value="enviar"
+                    class="boton-principal" style="background-color: var(--color-primario);">
+                ✓ Guardar y enviar esta versión a Revisión Técnica
+            </button>
         </section>
     </main>
 
+    <script th:src="@{/js/accesibilidad.js}" defer></script>
 </body>
 </html>

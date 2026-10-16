@@ -23,7 +23,11 @@ public class AccesibilidadService {
         this.aprendizRepository = aprendizRepository;
     }
 
-    @Transactional(readOnly = true)
+    /**
+     * Devuelve el perfil del usuario y, si no tiene, crea uno con los valores predeterminados.
+     * No es de solo lectura porque puede escribir (en MySQL una transacción de solo lectura rechaza el INSERT).
+     */
+    @Transactional
     public PerfilAccesibilidad obtenerPerfilPorCorreo(String correo) {
         return perfilRepository.findByAprendizCorreo(correo)
                 .orElseGet(() -> {
@@ -39,6 +43,7 @@ public class AccesibilidadService {
     public PerfilAccesibilidad actualizarPerfil(String correo, PerfilAccesibilidad datosActualizados) {
         PerfilAccesibilidad perfil = obtenerPerfilPorCorreo(correo);
         perfil.setVelocidadAudio(datosActualizados.getVelocidadAudio());
+        perfil.setVozLectura(AprendizService.normalizarVoz(datosActualizados.getVozLectura()));
         perfil.setModoVisual(datosActualizados.getModoVisual());
         perfil.setTamanoTexto(datosActualizados.getTamanoTexto());
         perfil.setSoloAudio(datosActualizados.isSoloAudio());

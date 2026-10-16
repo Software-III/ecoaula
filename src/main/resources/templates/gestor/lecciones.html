@@ -18,6 +18,9 @@
             <nav class="navegacion-principal" role="navigation" aria-label="Navegación principal">
                 <ul>
                     <li><a th:href="@{/gestor/cursos}">Mis Cursos y Contenidos</a></li>
+                    <li><a th:href="@{/informes-revision}">Informes de revisión</a></li>
+                    <li><a th:href="@{/reportes-barrera}">Reportes de barreras</a></li>
+                    <li><a th:href="@{/indicadores}">Indicadores</a></li>
                     <li><a th:href="@{/perfil}">Mi Perfil</a></li>
                 </ul>
             </nav>
@@ -60,19 +63,31 @@
                                 <strong th:text="${leccion.titulo}">Título de la lección</strong>
                             </td>
                             <td>
-                                <div th:if="${ultimasVersiones.containsKey(leccion.id)}">
-                                    <span th:text="'Versión ' + ${ultimasVersiones.get(leccion.id).numeroVersion}">v1</span>
-                                    <span th:text="'[' + ${ultimasVersiones.get(leccion.id).estado} + ']'"
-                                          th:class="'etiqueta-estado ' + (${ultimasVersiones.get(leccion.id).estado.name() == 'PUBLICADA' ? 'estado-publicada' : (ultimasVersiones.get(leccion.id).estado.name() == 'EN_REVISION' ? 'estado-en-revision' : (ultimasVersiones.get(leccion.id).estado.name() == 'RECHAZADA' ? 'estado-rechazada' : 'estado-borrador'))})">
-                                        [BORRADOR]
-                                    </span>
-                                </div>
-                                <span th:unless="${ultimasVersiones.containsKey(leccion.id)}">Sin versiones</span>
+                                <span th:replace="~{gestor/fragmentos :: estado(${estadosLeccion.get(leccion.id)})}">Estado</span>
                             </td>
                             <td>
-                                <a th:href="@{/gestor/lecciones/{id}/versiones(id=${leccion.id})}" class="boton-secundario" style="min-height: 38px; padding: 0.35rem 0.75rem; font-size: 0.95rem;">
+                                <a th:href="@{/gestor/lecciones/{id}/versiones(id=${leccion.id})}" class="boton-secundario" style="min-height: 38px; padding: 0.35rem 0.75rem; font-size: 0.95rem;"
+                                   th:attr="aria-label='Ver versiones de la lección ' + ${leccion.orden} + ': ' + ${leccion.titulo}">
                                     Ver versiones
                                 </a>
+                                <details th:unless="${curso.activo}" style="margin-top: 0.5rem;">
+                                    <summary th:text="'Modificar o eliminar la lección ' + ${leccion.orden}">Modificar o eliminar</summary>
+                                    <form th:action="@{/gestor/lecciones/{id}/titulo(id=${leccion.id})}" method="post" style="margin-top: 0.5rem;">
+                                        <div class="grupo-campo">
+                                            <label th:for="'titulo-' + ${leccion.id}">Nuevo título</label>
+                                            <input type="text" th:id="'titulo-' + ${leccion.id}" name="titulo" th:value="${leccion.titulo}" required maxlength="255">
+                                        </div>
+                                        <button type="submit" class="boton-secundario">Guardar título</button>
+                                    </form>
+                                    <form th:if="${matriculados == 0}" th:action="@{/gestor/lecciones/{id}/eliminar(id=${leccion.id})}" method="post" style="margin-top: 0.75rem;">
+                                        <div class="opcion-seleccion">
+                                            <input type="checkbox" th:id="'confirmar-' + ${leccion.id}" name="confirmar" value="true" required>
+                                            <label th:for="'confirmar-' + ${leccion.id}"
+                                                   th:text="'Confirmo que deseo eliminar la lección ' + ${leccion.titulo} + ' con todas sus versiones'">Confirmo</label>
+                                        </div>
+                                        <button type="submit" class="boton-secundario">Eliminar lección</button>
+                                    </form>
+                                </details>
                             </td>
                         </tr>
                     </tbody>
@@ -81,7 +96,12 @@
         </section>
 
         <!-- Formulario accesible para agregar una nueva lección -->
-        <section aria-labelledby="seccion-nueva-leccion" style="margin-top: 2.5rem; border-top: 2px solid var(--color-borde); padding-top: 1.5rem;">
+        <p th:if="${curso.activo or matriculados > 0}" class="ayuda-campo" style="margin-top: 2rem;">
+            Las lecciones solo se agregan o eliminan con el curso fuera del catálogo y sin aprendices matriculados,
+            para no cambiar el recorrido de quien ya lo cursa. Para corregir una lección, cree una nueva versión.
+        </p>
+
+        <section th:unless="${curso.activo or matriculados > 0}" aria-labelledby="seccion-nueva-leccion" style="margin-top: 2.5rem; border-top: 2px solid var(--color-borde); padding-top: 1.5rem;">
             <h2 id="seccion-nueva-leccion">Agregar Nueva Lección al Curso</h2>
             <p>Al agregar una lección, se creará automáticamente la versión 1 en estado <strong>BORRADOR</strong> para que pueda redactar la transcripción y subir el audio nativo.</p>
 
@@ -96,12 +116,7 @@
                     <span th:if="${#fields.hasErrors('titulo')}" th:errors="*{titulo}" class="error-campo" role="alert"></span>
                 </div>
 
-                <div class="grupo-campo">
-                    <label for="ordenLeccion">Número de orden secuencial *</label>
-                    <div class="ayuda-campo" id="ayuda-orden">Determina la posición en que los aprendices recorrerán la lección.</div>
-                    <input type="number" id="ordenLeccion" th:field="*{orden}" min="1" required aria-describedby="ayuda-orden" th:aria-invalid="${#fields.hasErrors('orden')}">
-                    <span th:if="${#fields.hasErrors('orden')}" th:errors="*{orden}" class="error-campo" role="alert"></span>
-                </div>
+                <p class="ayuda-campo">La lección se agrega al final del curso; las lecciones se recorren en orden, sin saltos.</p>
 
                 <div style="margin-top: 1.5rem;">
                     <button type="submit" class="boton-principal">+ Agregar Lección</button>

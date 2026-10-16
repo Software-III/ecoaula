@@ -19,6 +19,8 @@
                 <ul>
                     <li><a th:href="@{/cursos}">Catálogo de Cursos</a></li>
                     <li><a th:href="@{/perfil}" aria-current="page">Mi Perfil</a></li>
+                    <li><a th:href="@{/mis-reportes}">Mis reportes</a></li>
+                    <li><a th:href="@{/reportar-barrera(etapa='REGISTRO_MATRICULA')}">Reportar una barrera</a></li>
                     <li>
                         <form th:action="@{/logout}" method="post" style="display: inline;">
                             <button type="submit" class="boton-secundario" style="min-height: 38px; padding: 0.25rem 0.75rem; font-size: 1rem;">Cerrar Sesión</button>
@@ -36,6 +38,14 @@
 
         <p>Ajuste sus preferencias de visualización y audio. Los cambios se guardan de inmediato en su cuenta y se aplican en todas las páginas.</p>
 
+        <!-- Resumen accesible de errores del formulario -->
+        <div th:if="${#fields.hasErrors('${form.*}')}" class="resumen-errores" role="alert" tabindex="-1">
+            <h2>Por favor corrija los siguientes errores:</h2>
+            <ul>
+                <li th:each="err : ${#fields.errors('${form.*}')}" th:text="${err}">Error en el campo</li>
+            </ul>
+        </div>
+
         <form th:action="@{/perfil}" th:object="${form}" method="post" novalidate>
 
             <fieldset>
@@ -50,6 +60,22 @@
                         <option value="2.0">2.0x (Doble velocidad)</option>
                     </select>
                 </div>
+
+                <div class="grupo-campo">
+                    <label for="vozLectura">Voz para la lectura en voz alta</label>
+                    <span id="ayuda-voz" class="ayuda-campo">
+                        Se usa al pulsar "Leer en voz alta" en las lecciones. Las voces disponibles dependen de su navegador
+                        y sistema operativo. No cambia la voz de su lector de pantalla, que se configura en el propio lector.
+                    </span>
+                    <select id="vozLectura" name="vozLectura" aria-describedby="ayuda-voz"
+                            data-selector-voz th:attr="data-voz-actual=${form.vozLectura}">
+                        <option value="">Voz predeterminada del navegador</option>
+                        <option th:if="${form.vozLectura != null and !#strings.isEmpty(form.vozLectura)}"
+                                th:value="${form.vozLectura}" th:text="${form.vozLectura}" selected>Voz guardada</option>
+                    </select>
+                </div>
+                <button type="button" class="boton-secundario" hidden
+                        data-probar-voz="vozLectura" data-velocidad-desde="velocidadAudio">Probar voz y velocidad</button>
             </fieldset>
 
             <fieldset>
@@ -91,5 +117,6 @@
         </div>
     </main>
 
+    <script th:src="@{/js/accesibilidad.js}" defer></script>
 </body>
 </html>

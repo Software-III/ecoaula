@@ -18,7 +18,9 @@
             <nav class="navegacion-principal" role="navigation" aria-label="Navegación principal">
                 <ul>
                     <li><a th:href="@{/revisor/cola}" aria-current="page">Cola de Revisión</a></li>
-                    <li><a th:href="@{/revisor/indicadores}">Indicadores de Calidad</a></li>
+                                        <li><a th:href="@{/informes-revision}">Informes de revisión</a></li>
+                    <li><a th:href="@{/reportes-barrera}">Reportes de barreras</a></li>
+                    <li><a th:href="@{/indicadores}">Indicadores</a></li>
                     <li><a th:href="@{/perfil}">Mi Perfil</a></li>
                     <li>
                         <form th:action="@{/logout}" method="post" style="display: inline;">
@@ -40,7 +42,7 @@
         <p>Bienvenido al panel de auditoría. Aquí se listan las versiones de lecciones enviadas por los gestores que requieren verificación técnica de conformidad con WCAG 2.1 AA y NTC 5854 antes de su publicación oficial.</p>
 
         <div style="margin: 1.5rem 0;">
-            <a th:href="@{/revisor/indicadores}" class="boton-secundario">📊 Consultar Indicadores de Calidad</a>
+            <a th:href="@{/indicadores}" class="boton-secundario">📊 Consultar Indicadores de Calidad</a>
         </div>
 
         <section aria-labelledby="seccion-cola">

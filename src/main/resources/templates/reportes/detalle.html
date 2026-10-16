@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${titulo} + ' — EcoAula'">EcoAula</title>
+    <link rel="stylesheet" th:href="@{/css/ecoaula.css}">
+</head>
+<body th:class="${(perfilAccesibilidad != null and perfilAccesibilidad.modoVisual != null and perfilAccesibilidad.modoVisual.name() == 'ALTO_CONTRASTE' ? 'modo-alto-contraste ' : '') + (perfilAccesibilidad != null and perfilAccesibilidad.tamanoTexto != null and perfilAccesibilidad.tamanoTexto.name() == 'GRANDE' ? 'texto-grande ' : '') + (perfilAccesibilidad != null and perfilAccesibilidad.soloAudio ? 'solo-audio ' : '')}">
+
+    <a href="#contenido-principal" class="skip-link">Saltar al contenido principal</a>
+
+    <header class="encabezado-sitio" role="banner">
+        <div class="contenedor-principal">
+            <div style="font-size: 1.5rem; font-weight: bold;">EcoAula</div>
+            <nav class="navegacion-principal" role="navigation" aria-label="Navegación principal">
+                <ul>
+                    <li sec:authorize="hasRole('GESTOR_CONTENIDO')"><a th:href="@{/gestor/cursos}">Gestión de contenido</a></li>
+                    <li sec:authorize="hasRole('REVISOR_ACCESIBILIDAD')"><a th:href="@{/revisor/cola}">Revisión de accesibilidad</a></li>
+                    <li sec:authorize="hasAnyRole('GESTOR_CONTENIDO','REVISOR_ACCESIBILIDAD')"><a th:href="@{/informes-revision}">Informes de revisión</a></li>
+                    <li><a th:href="@{/reportes-barrera}">Reportes de barreras</a></li>
+                    <li><a th:href="@{/indicadores}">Indicadores</a></li>
+                    <li><a th:href="@{/perfil}">Mi Perfil</a></li>
+                    <li sec:authorize="isAuthenticated()">
+                        <form th:action="@{/logout}" method="post" style="display: inline;">
+                            <button type="submit" class="boton-secundario" style="min-height: 38px; padding: 0.25rem 0.75rem; font-size: 1rem;">Cerrar Sesión</button>
+                        </form>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main id="contenido-principal" class="contenedor-principal" role="main" tabindex="-1">
+        <h1 th:text="'Reporte número ' + ${reporte.id}">Reporte</h1>
+
+        <div th:if="${mensajeError != null}" class="resumen-errores" role="alert" tabindex="-1">
+            <h2>No se pudo actualizar el reporte</h2>
+            <p th:text="${mensajeError}">Error</p>
+        </div>
+
+        <dl>
+            <dt>Etapa</dt>
+            <dd th:text="${reporte.etapa.descripcion}">Etapa</dd>
+            <dt>Lugar</dt>
+            <dd th:text="${reporte.contexto != null ? reporte.contexto : 'No indicado'}">Lugar</dd>
+            <dt>Reportado por</dt>
+            <dd th:text="${reporte.correoAprendiz != null ? reporte.correoAprendiz : 'Persona sin sesión iniciada'}">Quién</dd>
+            <dt th:if="${reporte.correoContacto != null}">Correo de contacto</dt>
+            <dd th:if="${reporte.correoContacto != null}" th:text="${reporte.correoContacto}">Contacto</dd>
+            <dt>Tecnología de asistencia</dt>
+            <dd th:text="${reporte.tecnologiaAsistencia != null ? reporte.tecnologiaAsistencia : 'No indicada'}">Tecnología</dd>
+            <dt>Fecha</dt>
+            <dd th:text="${#temporals.format(reporte.creadoEn, 'dd/MM/yyyy HH:mm')}">Fecha</dd>
+            <dt th:if="${reporte.atendidoPor != null}">Atendido por</dt>
+            <dd th:if="${reporte.atendidoPor != null}" th:text="${reporte.atendidoPor}">Personal</dd>
+        </dl>
+
+        <section aria-labelledby="titulo-descripcion" class="transcripcion-caja">
+            <h2 id="titulo-descripcion" style="margin-top: 0; font-size: 1.2rem;">Descripción de la barrera</h2>
+            <p th:text="${reporte.descripcion}" style="white-space: pre-line;">Descripción</p>
+        </section>
+
+        <form th:action="@{/reportes-barrera/{id}(id=${reporte.id})}" method="post" style="margin-top: 2rem;">
+            <fieldset>
+                <legend>Estado del reporte</legend>
+                <div th:each="e : ${estados}" class="opcion-seleccion">
+                    <input type="radio" name="estado" th:id="'estado-' + ${e.name()}" th:value="${e.name()}" th:checked="${reporte.estado == e}">
+                    <label th:for="'estado-' + ${e.name()}"
+                           th:text="${e.name() == 'ABIERTO'} ? 'Abierto' : (${e.name() == 'EN_ATENCION'} ? 'En atención' : 'Resuelto')">Estado</label>
+                </div>
+            </fieldset>
+            <div class="grupo-campo">
+                <label for="respuesta">Respuesta para el aprendiz (obligatoria para marcarlo como resuelto)</label>
+                <span id="ayuda-respuesta" class="ayuda-campo">El aprendiz la verá en "Mis reportes". Explique qué se corrigió o qué alternativa tiene.</span>
+                <textarea id="respuesta" name="respuesta" rows="5" aria-describedby="ayuda-respuesta"
+                          th:text="${respuestaPendiente != null ? respuestaPendiente : reporte.respuesta}"></textarea>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
+                <button type="submit" class="boton-principal">Guardar</button>
+                <a th:href="@{/reportes-barrera}" class="boton-secundario">Volver al listado</a>
+            </div>
+        </form>
+    </main>
+
+</body>
+</html>
