@@ -16,6 +16,7 @@ import com.ecoaula.repository.CursoRepository;
 import com.ecoaula.repository.EvaluacionRepository;
 import com.ecoaula.repository.MatriculaRepository;
 import com.ecoaula.repository.RecursoImagenRepository;
+import com.ecoaula.service.dto.EstadoLeccion;
 import com.ecoaula.storage.ValidadorAudioService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,8 +24,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Servicio para la gestión de cursos, lecciones y versionamiento inmutable
@@ -42,6 +46,11 @@ public class GestionContenidoService {
     private final EvaluacionRepository evaluacionRepository;
     private final RecursoImagenRepository imagenRepository;
     private final ContenidoService contenidoService;
+
+    /** Estados de una versión cuyo trámite no ha terminado. */
+    private static final Set<EstadoContenido> ESTADOS_EN_TRAMITE =
+            EnumSet.of(EstadoContenido.BORRADOR, EstadoContenido.EN_REVISION);
+
 
     public GestionContenidoService(CursoRepository cursoRepository,
                                    ContenidoRepository contenidoRepository,
@@ -271,6 +280,7 @@ public class GestionContenidoService {
     public ContenidoVersion crearNuevaVersionBorrador(Long contenidoId, String correoGestor) {
         Aprendiz gestor = obtenerYValidarGestor(correoGestor);
         Contenido contenido = obtenerLeccion(contenidoId);
+        exigirSinVersionEnTramite(contenidoId);
 
         int siguienteNumero = versionRepository.findTopByContenidoIdOrderByNumeroVersionDesc(contenidoId)
                 .map(v -> v.getNumeroVersion() + 1)
@@ -303,6 +313,7 @@ public class GestionContenidoService {
         if (versionRechazada.getEstado() != EstadoContenido.RECHAZADA) {
             throw new ReglaNegocioException("Solo se pueden subsanar versiones en estado RECHAZADA.");
         }
+        exigirSinVersionEnTramite(versionRechazada.getContenido().getId());
 
         int siguienteNumero = versionRepository.findTopByContenidoIdOrderByNumeroVersionDesc(versionRechazada.getContenido().getId())
                 .map(v -> v.getNumeroVersion() + 1)
@@ -395,6 +406,38 @@ public class GestionContenidoService {
         version.setEstado(EstadoContenido.EN_REVISION);
         version.setEnviadaARevisionEn(LocalDateTime.now());
         return versionRepository.save(version);
+    }
+
+    /**
+     * Estado de la lección para los paneles: vigente, versiones en trámite y rechazada pendiente de subsanar.
+     * Mostrar solo la última versión ocultaba, por ejemplo, una versión en revisión detrás de un borrador más nuevo.
+     */
+    @Transactional(readOnly = true)
+    public EstadoLeccion estadoDeLeccion(Long contenidoId) {
+        List<ContenidoVersion> versiones = versionRepository.findByContenidoIdOrderByNumeroVersionDesc(contenidoId);
+        ContenidoVersion vigente = versiones.stream()
+                .filter(v -> v.getEstado() == EstadoContenido.PUBLICADA).findFirst().orElse(null);
+        List<ContenidoVersion> enTramite = versiones.stream()
+                .filter(v -> ESTADOS_EN_TRAMITE.contains(v.getEstado()))
+                .sorted(Comparator.comparing(ContenidoVersion::getNumeroVersion))
+                .toList();
+        // Una rechazada espera subsanación si es la versión más reciente de la lección
+        ContenidoVersion rechazada = !versiones.isEmpty() && versiones.get(0).getEstado() == EstadoContenido.RECHAZADA
+                ? versiones.get(0) : null;
+        return new EstadoLeccion(vigente, enTramite, rechazada);
+    }
+
+    /**
+     * Una lección tiene a lo sumo una versión en trámite (borrador o en revisión): con varias, el gestor
+     * no sabe cuál está revisando el revisor y la segunda aprobación reemplazaría a la primera sin decidirlo.
+     */
+    private void exigirSinVersionEnTramite(Long contenidoId) {
+        versionRepository.findByContenidoIdAndEstadoIn(contenidoId, ESTADOS_EN_TRAMITE).stream()
+                .findFirst()
+                .ifPresent(v -> {
+                    throw new ReglaNegocioException("La lección ya tiene la versión " + v.getNumeroVersion() + " en estado "
+                            + v.getEstado() + ". Termine ese trámite (o espere la decisión del revisor) antes de crear otra versión.");
+                });
     }
 
     /** Copia las imágenes (con su texto alternativo) a la nueva versión; los archivos se comparten porque son inmutables. */

@@ -41,9 +41,14 @@
         <p><strong>Principio de inmutabilidad (ADR-08):</strong> Las versiones publicadas y retiradas son de solo lectura. Todo ajuste o corrección crea una nueva versión. Los aprendices que ya completaron esta lección conservan la versión exacta que cursaron.</p>
 
         <div style="margin: 1.5rem 0;">
-            <form th:action="@{/gestor/lecciones/{id}/versiones/nueva(id=${leccion.id})}" method="post" style="display: inline;">
+            <form th:if="${#lists.isEmpty(estadoLeccion.enTramite())}" th:action="@{/gestor/lecciones/{id}/versiones/nueva(id=${leccion.id})}" method="post" style="display: inline;">
                 <button type="submit" class="boton-principal">+ Crear Nueva Versión en Borrador</button>
             </form>
+            <p th:unless="${#lists.isEmpty(estadoLeccion.enTramite())}" class="alerta" role="note"
+               th:with="v=${estadoLeccion.enTramite()[0]}"
+               th:text="'La versión ' + ${v.numeroVersion} + (${v.estado.name() == 'EN_REVISION'} ? ' está en revisión de accesibilidad' : ' está en borrador') + '. Termine ese trámite (o espere la decisión del revisor) antes de crear otra versión.'">
+                Versión en trámite
+            </p>
         </div>
 
         <section aria-labelledby="seccion-historial">

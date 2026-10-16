@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--
+  Estado completo de una lección (EstadoLeccion): la versión vigente, las que están en trámite y la rechazada
+  pendiente de subsanar. Mostrar solo la última versión ocultaba una versión en revisión detrás de un borrador más nuevo.
+-->
+<span th:fragment="estado(e)" class="estado-leccion">
+    <span th:if="${e == null}">Sin versiones</span>
+    <th:block th:if="${e != null}">
+        <span th:if="${e.vigente() != null}" class="etiqueta-estado estado-publicada"
+              th:text="'Vigente: v' + ${e.vigente().numeroVersion}">Vigente: v1</span>
+        <span th:if="${e.vigente() == null}">Sin versión publicada</span>
+        <span th:each="v : ${e.enTramite()}"
+              th:class="'etiqueta-estado ' + (${v.estado.name() == 'EN_REVISION'} ? 'estado-en-revision' : 'estado-borrador')"
+              th:text="'v' + ${v.numeroVersion} + ' ' + (${v.estado.name() == 'EN_REVISION'} ? 'en revisión' : 'en borrador')">v2 en revisión</span>
+        <span th:if="${e.rechazadaPendiente() != null}" class="etiqueta-estado estado-rechazada"
+              th:text="'v' + ${e.rechazadaPendiente().numeroVersion} + ' rechazada: pendiente de subsanar'">v2 rechazada</span>
+    </th:block>
+</span>
+
+</body>
+</html>

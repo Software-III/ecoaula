@@ -3,10 +3,12 @@ package com.ecoaula.controller;
 import com.ecoaula.exception.EcoAulaException;
 import com.ecoaula.model.RecursoImagen;
 import com.ecoaula.service.ContenidoService;
+import com.ecoaula.service.dto.EstadoLeccion;
 import com.ecoaula.service.RevisionContenidoService;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
+import java.util.Collection;
 import java.io.UncheckedIOException;
 import com.ecoaula.controller.dto.BorradorVersionForm;
 import com.ecoaula.controller.dto.CursoForm;
@@ -78,6 +80,7 @@ public class GestorContenidoController {
         model.addAttribute("evaluacionPorCurso", evaluacionPorCurso);
         model.addAttribute("leccionesPorCurso", leccionesPorCurso);
         model.addAttribute("ultimasVersiones", ultimasVersiones);
+        model.addAttribute("estadosLeccion", estadosDe(ultimasVersiones.keySet()));
         return "gestor/cursos";
     }
 
@@ -196,6 +199,7 @@ public class GestorContenidoController {
         model.addAttribute("curso", curso);
         model.addAttribute("lecciones", lecciones);
         model.addAttribute("ultimasVersiones", ultimasVersiones);
+        model.addAttribute("estadosLeccion", estadosDe(ultimasVersiones.keySet()));
         model.addAttribute("leccionForm", new LeccionForm("", siguienteOrden));
         return "gestor/lecciones";
     }
@@ -221,6 +225,7 @@ public class GestorContenidoController {
             model.addAttribute("curso", curso);
             model.addAttribute("lecciones", lecciones);
             model.addAttribute("ultimasVersiones", ultimasVersiones);
+        model.addAttribute("estadosLeccion", estadosDe(ultimasVersiones.keySet()));
             model.addAttribute("matriculados", gestionContenidoService.contarMatriculados(cursoId));
             return "gestor/lecciones";
         }
@@ -257,6 +262,7 @@ public class GestorContenidoController {
         revisionContenidoService.historialDeLeccion(contenidoId)
                 .forEach(r -> informePorVersion.put(r.getVersion().getId(), r.getId()));
         model.addAttribute("informePorVersion", informePorVersion);
+        model.addAttribute("estadoLeccion", gestionContenidoService.estadoDeLeccion(contenidoId));
         return "gestor/versiones";
     }
 
@@ -264,7 +270,13 @@ public class GestorContenidoController {
     public String crearNuevaVersion(@PathVariable("contenidoId") Long contenidoId,
                                     Principal principal,
                                     RedirectAttributes redirectAttributes) {
-        ContenidoVersion nuevaVersion = gestionContenidoService.crearNuevaVersionBorrador(contenidoId, principal.getName());
+        ContenidoVersion nuevaVersion;
+        try {
+            nuevaVersion = gestionContenidoService.crearNuevaVersionBorrador(contenidoId, principal.getName());
+        } catch (EcoAulaException ex) {
+            redirectAttributes.addFlashAttribute("mensajeError", ex.getMessage());
+            return "redirect:/gestor/lecciones/" + contenidoId + "/versiones";
+        }
         redirectAttributes.addFlashAttribute("mensajeExito", "Se ha creado la versión " + nuevaVersion.getNumeroVersion() + " en estado BORRADOR.");
         return "redirect:/gestor/versiones/" + nuevaVersion.getId() + "/editar";
     }
@@ -273,7 +285,13 @@ public class GestorContenidoController {
     public String subsanarVersionRechazada(@PathVariable("versionId") Long versionId,
                                            Principal principal,
                                            RedirectAttributes redirectAttributes) {
-        ContenidoVersion nuevoBorrador = gestionContenidoService.crearVersionDesdeRechazada(versionId, principal.getName());
+        ContenidoVersion nuevoBorrador;
+        try {
+            nuevoBorrador = gestionContenidoService.crearVersionDesdeRechazada(versionId, principal.getName());
+        } catch (EcoAulaException ex) {
+            redirectAttributes.addFlashAttribute("mensajeError", ex.getMessage());
+            return "redirect:/gestor/lecciones/" + gestionContenidoService.obtenerVersionDetalle(versionId).getContenido().getId() + "/versiones";
+        }
         redirectAttributes.addFlashAttribute("mensajeExito", "Se creó la versión " + nuevoBorrador.getNumeroVersion() +
                 " en estado BORRADOR a partir de la versión rechazada. Realice las correcciones necesarias y reenvíe a revisión.");
         return "redirect:/gestor/versiones/" + nuevoBorrador.getId() + "/editar";
@@ -466,5 +484,12 @@ public class GestorContenidoController {
         } catch (IOException e) {
             throw new UncheckedIOException("No se pudo leer el archivo adjunto", e);
         }
+    }
+
+    /** Estado completo de cada lección (vigente, en trámite y rechazada pendiente) para los paneles. */
+    private Map<Long, EstadoLeccion> estadosDe(Collection<Long> contenidoIds) {
+        Map<Long, EstadoLeccion> estados = new HashMap<>();
+        contenidoIds.forEach(id -> estados.put(id, gestionContenidoService.estadoDeLeccion(id)));
+        return estados;
     }
 }

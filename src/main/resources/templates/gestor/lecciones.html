@@ -63,14 +63,7 @@
                                 <strong th:text="${leccion.titulo}">Título de la lección</strong>
                             </td>
                             <td>
-                                <div th:if="${ultimasVersiones.containsKey(leccion.id)}">
-                                    <span th:text="'Versión ' + ${ultimasVersiones.get(leccion.id).numeroVersion}">v1</span>
-                                    <span th:text="'[' + ${ultimasVersiones.get(leccion.id).estado} + ']'"
-                                          th:class="'etiqueta-estado ' + (${ultimasVersiones.get(leccion.id).estado.name() == 'PUBLICADA' ? 'estado-publicada' : (ultimasVersiones.get(leccion.id).estado.name() == 'EN_REVISION' ? 'estado-en-revision' : (ultimasVersiones.get(leccion.id).estado.name() == 'RECHAZADA' ? 'estado-rechazada' : 'estado-borrador'))})">
-                                        [BORRADOR]
-                                    </span>
-                                </div>
-                                <span th:unless="${ultimasVersiones.containsKey(leccion.id)}">Sin versiones</span>
+                                <span th:replace="~{gestor/fragmentos :: estado(${estadosLeccion.get(leccion.id)})}">Estado</span>
                             </td>
                             <td>
                                 <a th:href="@{/gestor/lecciones/{id}/versiones(id=${leccion.id})}" class="boton-secundario" style="min-height: 38px; padding: 0.35rem 0.75rem; font-size: 0.95rem;"

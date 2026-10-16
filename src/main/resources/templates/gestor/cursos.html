@@ -88,11 +88,7 @@
                                     <span th:text="${leccion.titulo}">Título de la lección</span>
                                 </span>
                                 <span>
-                                    <span th:if="${ultimasVersiones.containsKey(leccion.id)}"
-                                          th:text="'v' + ${ultimasVersiones.get(leccion.id).numeroVersion} + ' (' + ${ultimasVersiones.get(leccion.id).estado} + ')'"
-                                          th:class="'etiqueta-estado ' + (${ultimasVersiones.get(leccion.id).estado.name() == 'PUBLICADA' ? 'estado-publicada' : (ultimasVersiones.get(leccion.id).estado.name() == 'EN_REVISION' ? 'estado-en-revision' : (ultimasVersiones.get(leccion.id).estado.name() == 'RECHAZADA' ? 'estado-rechazada' : 'estado-borrador'))})">
-                                        v1 (BORRADOR)
-                                    </span>
+                                    <span th:replace="~{gestor/fragmentos :: estado(${estadosLeccion.get(leccion.id)})}">Estado</span>
                                     <a th:href="@{/gestor/lecciones/{id}/versiones(id=${leccion.id})}" style="margin-left: 0.75rem;">Versiones</a>
                                 </span>
                             </li>

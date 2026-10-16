@@ -20,6 +20,7 @@ Se tomó como **base la implementación de Leonardo** (ya revisada y fusionada e
 | El rechazo no enviaba los criterios marcados (formulario separado) | El informe de un rechazo no decía qué criterios sí se cumplían | Un solo formulario con dos botones (`formaction`) |
 | `AccesibilidadService.obtenerPerfilPorCorreo` crea el perfil por defecto en una transacción de solo lectura (código previo) | En MySQL falla el INSERT en cada página que ven gestor y revisor (no tienen perfil sembrado); en H2 no se nota | `@Transactional` sin `readOnly` |
 | En el editor de borradores, "Enviar a revisión" era un formulario aparte que solo enviaba el token CSRF | Lo marcado o escrito sin pulsar antes "Guardar" (por ejemplo la casilla de licencia) se perdía y el envío fallaba | El botón ahora es "Guardar y enviar" y pertenece al formulario del borrador (atributo `form`, `accion=enviar`) |
+| Se podían tener varias versiones en trámite en la misma lección y los paneles solo mostraban la de número más alto | Una versión enviada a revisión quedaba oculta detrás de un borrador más nuevo ("no se actualiza el estado"); además, aprobar dos versiones en trámite reemplazaba la primera sin que nadie lo decidiera | A lo sumo una versión en BORRADOR o EN_REVISION por lección (también al subsanar); los paneles muestran vigente, en trámite y rechazada pendiente (`EstadoLeccion`, fragmento `gestor/fragmentos.html`) |
 | Agregar lección permitía cualquier número de orden | Huecos o duplicados rompen la navegación del aprendiz (lección n → n+1) | La lección se agrega siempre al final; al eliminar se renumera |
 
 ## 3. Reglas nuevas en el flujo del gestor
@@ -33,6 +34,7 @@ Se tomó como **base la implementación de Leonardo** (ya revisada y fusionada e
 | Enviar a revisión | Además de audio y transcripción: fuente del material y licencia declaradas (Ley 23 de 1982) |
 | Nueva versión de una lección publicada | Parte de la vigente (transcripción, audio, fuente e imágenes) en lugar de un borrador vacío |
 | Subsanación | Hereda también la fuente y las imágenes de la rechazada |
+| Crear nueva versión o subsanar | Solo si la lección no tiene otra versión en borrador o en revisión |
 | Curso nuevo | Nace fuera del catálogo; duración de 8 a 40 horas (caso de estudio); cupo opcional |
 
 ## 4. Cambios en el código de Leonardo (para revisar al integrar)

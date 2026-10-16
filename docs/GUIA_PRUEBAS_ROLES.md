@@ -77,6 +77,8 @@ La cola del revisor inicia con 3 versiones y la Tasa First-Pass en 33,3 % (1 de 
 | G4 | Agregar la imagen con texto alternativo y descripción detallada | Aparece en "Imágenes de la lección" | ☐ |
 | G5 | Escribir la fuente, marcar la licencia y pulsar **directamente** "Guardar y enviar…" (sin guardar antes) | Se guardan los cambios y se envía: "Ha sido enviada a revisión técnica"; queda EN_REVISION | ☐ |
 | G6 | En una lección publicada, "Crear Nueva Versión en Borrador" | El borrador parte de la versión vigente (transcripción, audio, fuente e imágenes) | ☐ |
+| G6b | Volver al listado de cursos tras G5 | La lección muestra su estado completo: versión vigente (si la hay) y "vN en revisión" | ☐ |
+| G6c | En una lección con una versión en borrador o en revisión, abrir sus versiones | No se ofrece "Crear Nueva Versión": se indica qué versión está en trámite | ☐ |
 
 ### 3.2 Curso nuevo y catálogo
 

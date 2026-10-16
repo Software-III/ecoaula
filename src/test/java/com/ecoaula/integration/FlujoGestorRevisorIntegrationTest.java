@@ -197,6 +197,43 @@ class FlujoGestorRevisorIntegrationTest {
     }
 
     @Test
+    @DisplayName("El panel muestra el estado completo de cada lección y no se crea otra versión con una en trámite")
+    void estadoCompletoYUnaVersionEnTramite() throws Exception {
+        // Caso reportado: v1 enviada a revisión y una v2 en borrador más nueva; antes solo se veía "v2 (BORRADOR)"
+        String titulo = "Curso estado " + System.nanoTime();
+        mockMvc.perform(nuevoCurso(titulo, "8")).andExpect(status().is3xxRedirection());
+        Curso curso = curso(titulo);
+        mockMvc.perform(post("/gestor/cursos/{id}/lecciones/nueva", curso.getId()).with(GESTOR).with(csrf())
+                .param("titulo", "Lección con dos versiones")).andExpect(status().is3xxRedirection());
+        Contenido leccion = contenidoRepository.findByCursoIdAndOrden(curso.getId(), 1).orElseThrow();
+        ContenidoVersion v1 = ultimaVersion(leccion);
+        v1.setEstado(EstadoContenido.EN_REVISION);
+        versionRepository.save(v1);
+        ContenidoVersion v2 = new ContenidoVersion(leccion, 2, null);
+        versionRepository.save(v2);
+
+        mockMvc.perform(get("/gestor/cursos").with(GESTOR))
+                .andExpect(content().string(containsString("v1 en revisión")))
+                .andExpect(content().string(containsString("v2 en borrador")));
+        mockMvc.perform(get("/gestor/cursos/{id}/lecciones", curso.getId()).with(GESTOR))
+                .andExpect(content().string(containsString("v1 en revisión")));
+
+        // Con versiones en trámite no se ofrece ni se permite crear otra
+        mockMvc.perform(get("/gestor/lecciones/{id}/versiones", leccion.getId()).with(GESTOR))
+                .andExpect(content().string(not(containsString("+ Crear Nueva Versión en Borrador"))))
+                .andExpect(content().string(containsString("Termine ese trámite")));
+        mockMvc.perform(post("/gestor/lecciones/{id}/versiones/nueva", leccion.getId()).with(GESTOR).with(csrf()))
+                .andExpect(redirectedUrl("/gestor/lecciones/" + leccion.getId() + "/versiones"))
+                .andExpect(flash().attribute("mensajeError", containsString("ya tiene la versión")));
+        assertEquals(2, versionRepository.findByContenidoIdOrderByNumeroVersionDesc(leccion.getId()).size());
+
+        // Datos sembrados: vigente con una versión nueva en revisión, y subsanación en revisión sin vigente
+        mockMvc.perform(get("/gestor/cursos").with(GESTOR))
+                .andExpect(content().string(containsString("Vigente: v1")))
+                .andExpect(content().string(containsString("v2 en revisión")));
+    }
+
+    @Test
     @DisplayName("Modificar y eliminar: título de lección, eliminación con renumeración, curso completo y reglas del catálogo")
     void modificarYEliminar() throws Exception {
         String titulo = "Curso editable " + System.nanoTime();
