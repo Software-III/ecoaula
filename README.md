@@ -126,3 +126,26 @@ El reporte interactivo de cobertura se genera en: `target/site/jacoco/index.html
 - [Modelo de Datos y Diagrama ER](docs/MODELO_DATOS.md)
 - [Registro de Decisiones Pendientes](docs/DECISIONES_PENDIENTES.md)
 - [Protocolo de Pruebas de Accesibilidad](docs/PRUEBAS_ACCESIBILIDAD.md)
+- [Manual de Despliegue y Operaciones en Producción](docs/DESPLIEGUE.md)
+
+---
+
+## 🚀 Despliegue en Producción (AWS Lightsail)
+
+- **URL de Producción Oficial (SSL/TLS):** [https://3-237-185-159.sslip.io](https://3-237-185-159.sslip.io)
+- **Configuraciones listas para producción (sin secretos):** Carpeta [`deploy/`](deploy/)
+  - `deploy/nginx/ecoaula.conf`: Configuración del proxy inverso Nginx con terminación TLS y cabeceras anti-suplantación.
+  - `deploy/systemd/ecoaula.service`: Definición del servicio systemd con perfil `prod`.
+  - `deploy/scripts/backup.sh`: Respaldo automático de base de datos MySQL y almacenamiento de audios.
+  - `deploy/scripts/restore.sh`: Script de restauración de respaldos.
+
+### Procedimiento para Redesplegar en el Servidor:
+```bash
+cd /home/ubuntu/ecoaula
+git pull origin feature/base-inicial
+./mvnw clean package -DskipTests
+sudo systemctl restart ecoaula
+sudo systemctl status ecoaula
+```
+Para detalles completos de arquitectura, respaldos, variables de entorno y firewall, consulte el [Manual de Despliegue](docs/DESPLIEGUE.md).
+
