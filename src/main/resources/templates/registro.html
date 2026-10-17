@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro y Perfil de Accesibilidad — EcoAula</title>
+    <link rel="stylesheet" th:href="@{/css/ecoaula.css}">
+</head>
+<body th:class="${(perfilAccesibilidad != null and perfilAccesibilidad.modoVisual != null and perfilAccesibilidad.modoVisual.name() == 'ALTO_CONTRASTE' ? 'modo-alto-contraste ' : '') + (perfilAccesibilidad != null and perfilAccesibilidad.tamanoTexto != null and perfilAccesibilidad.tamanoTexto.name() == 'GRANDE' ? 'texto-grande ' : '')}">
+
+    <a href="#contenido-principal" class="skip-link">Saltar al contenido principal</a>
+
+    <header class="encabezado-sitio" role="banner">
+        <div class="contenedor-principal">
+            <div style="font-size: 1.5rem; font-weight: bold;">
+                <a th:href="@{/cursos}" style="text-decoration: none; color: inherit;">EcoAula</a>
+            </div>
+        </div>
+    </header>
+
+    <main id="contenido-principal" class="contenedor-principal" role="main" tabindex="-1">
+        <h1>Registro y Perfil de Accesibilidad</h1>
+
+        <p>¿Tiene dificultades para usar esta página con su tecnología de asistencia?
+            <a th:href="@{/reportar-barrera(etapa='REGISTRO_MATRICULA')}">Reporte una barrera de accesibilidad</a>, sin necesidad de iniciar sesión.</p>
+
+        <p>Complete el siguiente formulario en una sola columna para crear su cuenta y configurar cómo desea interactuar con la plataforma.</p>
+
+        <!-- Resumen accesible de errores del formulario -->
+        <div th:if="${#fields.hasErrors('${form.*}')}" class="resumen-errores" role="alert" tabindex="-1">
+            <h2>Por favor corrija los siguientes errores:</h2>
+            <ul>
+                <li th:each="err : ${#fields.errors('${form.*}')}" th:text="${err}">Error en el campo</li>
+            </ul>
+        </div>
+
+        <form th:action="@{/registro}" th:object="${form}" method="post" novalidate>
+
+            <fieldset>
+                <legend>Datos personales de la cuenta</legend>
+
+                <div class="grupo-campo">
+                    <label for="nombreCompleto">Nombre completo (requerido)</label>
+                    <input type="text" id="nombreCompleto" th:field="*{nombreCompleto}"
+                           required autocomplete="name"
+                           th:attr="aria-invalid=${#fields.hasErrors('nombreCompleto')}, aria-describedby=${#fields.hasErrors('nombreCompleto')} ? 'err-nombre' : null">
+                    <span id="err-nombre" class="error-campo" th:if="${#fields.hasErrors('nombreCompleto')}" th:errors="*{nombreCompleto}"></span>
+                </div>
+
+                <div class="grupo-campo">
+                    <label for="correo">Correo electrónico (requerido, servirá como usuario de ingreso)</label>
+                    <input type="email" id="correo" th:field="*{correo}"
+                           required autocomplete="email"
+                           th:attr="aria-invalid=${#fields.hasErrors('correo')}, aria-describedby=${#fields.hasErrors('correo')} ? 'err-correo' : null">
+                    <span id="err-correo" class="error-campo" th:if="${#fields.hasErrors('correo')}" th:errors="*{correo}"></span>
+                </div>
+
+                <div class="grupo-campo">
+                    <label for="telefono">Número de teléfono de contacto (requerido)</label>
+                    <input type="tel" id="telefono" th:field="*{telefono}"
+                           required autocomplete="tel"
+                           th:attr="aria-invalid=${#fields.hasErrors('telefono')}, aria-describedby=${#fields.hasErrors('telefono')} ? 'err-telefono' : null">
+                    <span id="err-telefono" class="error-campo" th:if="${#fields.hasErrors('telefono')}" th:errors="*{telefono}"></span>
+                </div>
+
+                <div class="grupo-campo">
+                    <label for="password">Contraseña (mínimo 8 caracteres)</label>
+                    <input type="password" id="password" th:field="*{password}"
+                           required autocomplete="new-password"
+                           th:attr="aria-invalid=${#fields.hasErrors('password')}, aria-describedby=${#fields.hasErrors('password')} ? 'err-pass' : null">
+                    <span id="err-pass" class="error-campo" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></span>
+                </div>
+
+                <div class="grupo-campo">
+                    <label for="condicionVisual">Condición visual específica (opcional)</label>
+                    <p id="ayuda-condicion" class="ayuda-campo">Este dato sensible se almacena bajo cifrado simétrico AES-GCM (ADR-09) y solo se utiliza para adaptar los contenidos según la Ley 1581 de 2012.</p>
+                    <input type="text" id="condicionVisual" th:field="*{condicionVisual}" aria-describedby="ayuda-condicion">
+                </div>
+
+                <div class="grupo-campo opcion-seleccion">
+                    <input type="checkbox" id="consentimientoDatos" th:field="*{consentimientoDatos}" required
+                           th:attr="aria-invalid=${#fields.hasErrors('consentimientoDatos')}, aria-describedby=${#fields.hasErrors('consentimientoDatos')} ? 'err-consent' : null">
+                    <label for="consentimientoDatos">
+                        <strong>Autorización de tratamiento de datos personales:</strong> Autorizo de manera previa, expresa e informada el tratamiento de mis datos personales y sensibles con fines estrictamente académicos (Ley 1581 de 2012 y Decreto 1377 de 2013).
+                    </label>
+                </div>
+                <span id="err-consent" class="error-campo" th:if="${#fields.hasErrors('consentimientoDatos')}" th:errors="*{consentimientoDatos}"></span>
+            </fieldset>
+
+            <fieldset>
+                <legend>Preferencias de accesibilidad de la plataforma</legend>
+
+                <div class="grupo-campo">
+                    <label for="velocidadAudio">Velocidad preferida de reproducción de audio</label>
+                    <select id="velocidadAudio" th:field="*{velocidadAudio}">
+                        <option value="0.75">0.75x (Más pausado)</option>
+                        <option value="1.0" selected>1.0x (Velocidad estándar predeterminada)</option>
+                        <option value="1.25">1.25x (Ligeramente rápido)</option>
+                        <option value="1.5">1.5x (Rápido)</option>
+                        <option value="2.0">2.0x (Doble velocidad)</option>
+                    </select>
+                </div>
+
+                <div class="grupo-campo">
+                    <label for="vozLectura">Voz para la lectura en voz alta</label>
+                    <span id="ayuda-voz" class="ayuda-campo">
+                        Se usa al pulsar "Leer en voz alta" en las lecciones. Las voces disponibles dependen de su navegador
+                        y sistema operativo. No cambia la voz de su lector de pantalla, que se configura en el propio lector.
+                    </span>
+                    <select id="vozLectura" name="vozLectura" aria-describedby="ayuda-voz"
+                            data-selector-voz th:attr="data-voz-actual=${form.vozLectura}">
+                        <option value="">Voz predeterminada del navegador</option>
+                        <option th:if="${form.vozLectura != null and !#strings.isEmpty(form.vozLectura)}"
+                                th:value="${form.vozLectura}" th:text="${form.vozLectura}" selected>Voz guardada</option>
+                    </select>
+                </div>
+                <button type="button" class="boton-secundario" hidden
+                        data-probar-voz="vozLectura" data-velocidad-desde="velocidadAudio">Probar voz y velocidad</button>
+
+                <fieldset>
+                    <legend>Modo visual de contraste</legend>
+                    <div class="opcion-seleccion">
+                        <input type="radio" id="modoEstandar" th:field="*{modoVisual}" value="ESTANDAR">
+                        <label for="modoEstandar">Modo estándar (fondo claro con texto oscuro de alto contraste)</label>
+                    </div>
+                    <div class="opcion-seleccion">
+                        <input type="radio" id="modoAltoContraste" th:field="*{modoVisual}" value="ALTO_CONTRASTE">
+                        <label for="modoAltoContraste">Modo alto contraste (fondo negro puro con texto y enlaces en amarillo brillante)</label>
+                    </div>
+                </fieldset>
+
+                <fieldset>
+                    <legend>Tamaño de texto en pantalla</legend>
+                    <div class="opcion-seleccion">
+                        <input type="radio" id="tamanoNormal" th:field="*{tamanoTexto}" value="NORMAL">
+                        <label for="tamanoNormal">Tamaño normal (18px base adaptable a zoom)</label>
+                    </div>
+                    <div class="opcion-seleccion">
+                        <input type="radio" id="tamanoGrande" th:field="*{tamanoTexto}" value="GRANDE">
+                        <label for="tamanoGrande">Tamaño grande (22px base aumentado)</label>
+                    </div>
+                </fieldset>
+
+                <div class="grupo-campo opcion-seleccion">
+                    <input type="checkbox" id="soloAudio" th:field="*{soloAudio}">
+                    <label for="soloAudio">Priorizar modo solo audio (focaliza la interfaz en el reproductor y las transcripciones)</label>
+                </div>
+            </fieldset>
+
+            <div style="margin-top: 2rem;">
+                <button type="submit" class="boton-principal">Guardar y continuar</button>
+            </div>
+        </form>
+    </main>
+
+    <script th:src="@{/js/accesibilidad.js}" defer></script>
+</body>
+</html>

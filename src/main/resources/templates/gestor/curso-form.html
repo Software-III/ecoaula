@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${titulo != null ? titulo : 'Curso — EcoAula'}">Curso — EcoAula</title>
+    <link rel="stylesheet" th:href="@{/css/ecoaula.css}">
+</head>
+<body th:class="${(perfilAccesibilidad != null and perfilAccesibilidad.modoVisual != null and perfilAccesibilidad.modoVisual.name() == 'ALTO_CONTRASTE' ? 'modo-alto-contraste ' : '') + (perfilAccesibilidad != null and perfilAccesibilidad.tamanoTexto != null and perfilAccesibilidad.tamanoTexto.name() == 'GRANDE' ? 'texto-grande ' : '') + (perfilAccesibilidad != null and perfilAccesibilidad.soloAudio ? 'solo-audio ' : '')}">
+
+    <a href="#contenido-principal" class="skip-link">Saltar al contenido principal</a>
+
+    <header class="encabezado-sitio" role="banner">
+        <div class="contenedor-principal">
+            <div style="font-size: 1.5rem; font-weight: bold;">
+                <a th:href="@{/gestor/cursos}" style="text-decoration: none; color: inherit;">EcoAula — Portal del Gestor</a>
+            </div>
+            <nav class="navegacion-principal" role="navigation" aria-label="Navegación principal">
+                <ul>
+                    <li><a th:href="@{/gestor/cursos}">Mis Cursos y Contenidos</a></li>
+                    <li><a th:href="@{/informes-revision}">Informes de revisión</a></li>
+                    <li><a th:href="@{/reportes-barrera}">Reportes de barreras</a></li>
+                    <li><a th:href="@{/indicadores}">Indicadores</a></li>
+                    <li><a th:href="@{/perfil}">Mi Perfil</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main id="contenido-principal" class="contenedor-principal" role="main" tabindex="-1">
+        <h1 th:text="${titulo}">Crear o Editar Curso</h1>
+
+        <div th:if="${mensajeError != null}" class="alerta alerta-error" role="alert" th:text="${mensajeError}"></div>
+        <p th:if="${curso != null and curso.activo}" class="alerta alerta-error" role="note">
+            Este curso está publicado en el catálogo. Retírelo del catálogo para modificar sus datos o eliminarlo.
+        </p>
+
+        <p>Diligencie los campos requeridos para la configuración accesible del curso. Todos los campos marcados con asterisco (*) son obligatorios.</p>
+
+        <!-- Resumen de errores accesible con role="alert" -->
+        <div th:if="${#fields.hasErrors('${cursoForm.*}')}" class="resumen-errores" role="alert" tabindex="-1" id="resumen-errores">
+            <h2 style="margin-top: 0; font-size: 1.2rem;">Por favor corrija los siguientes errores:</h2>
+            <ul>
+                <li th:each="err : ${#fields.errors('${cursoForm.*}')}" th:text="${err}">Error en el formulario</li>
+            </ul>
+        </div>
+
+        <form th:action="${esEdicion ? '/gestor/cursos/' + cursoId + '/editar' : '/gestor/cursos/nuevo'}"
+              th:object="${cursoForm}"
+              method="post"
+              novalidate>
+
+            <div class="grupo-campo">
+                <label for="titulo">Título del curso *</label>
+                <div class="ayuda-campo" id="ayuda-titulo">Nombre claro y descriptivo del curso (entre 5 y 200 caracteres).</div>
+                <input type="text" id="titulo" th:field="*{titulo}" required aria-describedby="ayuda-titulo" th:aria-invalid="${#fields.hasErrors('titulo')}">
+                <span th:if="${#fields.hasErrors('titulo')}" th:errors="*{titulo}" class="error-campo" role="alert"></span>
+            </div>
+
+            <div class="grupo-campo">
+                <label for="descripcion">Descripción del curso *</label>
+                <div class="ayuda-campo" id="ayuda-descripcion">Detalle de los objetivos de aprendizaje, contenido y perfil de salida accesible.</div>
+                <textarea id="descripcion" th:field="*{descripcion}" rows="5" required aria-describedby="ayuda-descripcion" th:aria-invalid="${#fields.hasErrors('descripcion')}"></textarea>
+                <span th:if="${#fields.hasErrors('descripcion')}" th:errors="*{descripcion}" class="error-campo" role="alert"></span>
+            </div>
+
+            <div class="grupo-campo">
+                <label for="horas">Intensidad horaria (horas) *</label>
+                <div class="ayuda-campo" id="ayuda-horas">Número de horas estimadas de dedicación del estudiante.</div>
+                <input type="text" id="horas" th:field="*{horas}" required aria-describedby="ayuda-horas" th:aria-invalid="${#fields.hasErrors('horas')}">
+                <span th:if="${#fields.hasErrors('horas')}" th:errors="*{horas}" class="error-campo" role="alert"></span>
+            </div>
+
+            <div class="grupo-campo">
+                <label for="area">Área de conocimiento *</label>
+                <div class="ayuda-campo" id="ayuda-area">Ejemplo: Tecnología y Productividad, Habilidades Humanas, Finanzas.</div>
+                <input type="text" id="area" th:field="*{area}" required aria-describedby="ayuda-area" th:aria-invalid="${#fields.hasErrors('area')}">
+                <span th:if="${#fields.hasErrors('area')}" th:errors="*{area}" class="error-campo" role="alert"></span>
+            </div>
+
+            <div class="grupo-campo">
+                <label for="modalidad">Modalidad de entrega *</label>
+                <input type="text" id="modalidad" th:field="*{modalidad}" required th:aria-invalid="${#fields.hasErrors('modalidad')}">
+                <span th:if="${#fields.hasErrors('modalidad')}" th:errors="*{modalidad}" class="error-campo" role="alert"></span>
+            </div>
+
+            <div class="grupo-campo">
+                <label for="cupoMaximo">Cupo máximo de aprendices (opcional)</label>
+                <div class="ayuda-campo" id="ayuda-cupo">Déjelo vacío si el curso no tiene límite de matrículas.</div>
+                <input type="number" id="cupoMaximo" th:field="*{cupoMaximo}" min="1" aria-describedby="ayuda-cupo"
+                       th:aria-invalid="${#fields.hasErrors('cupoMaximo')}">
+                <span th:if="${#fields.hasErrors('cupoMaximo')}" th:errors="*{cupoMaximo}" class="error-campo" role="alert"></span>
+            </div>
+
+            <p class="ayuda-campo">
+                El curso se publica en el catálogo desde el listado de cursos, cuando todas sus lecciones tienen una versión
+                aprobada por el revisor de accesibilidad y el curso tiene evaluación final.
+            </p>
+
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 2rem;">
+                <button type="submit" class="boton-principal" th:text="${esEdicion ? 'Guardar Cambios' : 'Crear Curso'}">Guardar</button>
+                <a th:href="@{/gestor/cursos}" class="boton-secundario">Cancelar</a>
+            </div>
+        </form>
+
+        <!-- Eliminación con confirmación explícita (sin diálogos de JavaScript, accesible por teclado y lector de pantalla) -->
+        <section th:if="${esEdicion}" id="seccion-eliminar" aria-labelledby="titulo-eliminar" style="margin-top: 3rem; border-top: 2px solid var(--color-borde); padding-top: 1.5rem;">
+            <h2 id="titulo-eliminar" style="font-size: 1.3rem;">Eliminar curso</h2>
+            <p>
+                Se eliminarán de forma definitiva el curso, todas sus lecciones y versiones, sus imágenes, sus informes de revisión
+                y su evaluación final. Solo es posible si el curso está fuera del catálogo, no tiene aprendices matriculados
+                y no tiene versiones en revisión.
+            </p>
+            <form th:action="@{/gestor/cursos/{id}/eliminar(id=${cursoId})}" method="post">
+                <div class="opcion-seleccion">
+                    <input type="checkbox" id="confirmar-eliminar-curso" name="confirmar" value="true" required>
+                    <label for="confirmar-eliminar-curso">Confirmo que deseo eliminar este curso y todo su contenido.</label>
+                </div>
+                <button type="submit" class="boton-secundario">Eliminar curso definitivamente</button>
+            </form>
+        </section>
+    </main>
+
+</body>
+</html>

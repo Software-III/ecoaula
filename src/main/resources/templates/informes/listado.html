@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${titulo} + ' — EcoAula'">EcoAula</title>
+    <link rel="stylesheet" th:href="@{/css/ecoaula.css}">
+</head>
+<body th:class="${(perfilAccesibilidad != null and perfilAccesibilidad.modoVisual != null and perfilAccesibilidad.modoVisual.name() == 'ALTO_CONTRASTE' ? 'modo-alto-contraste ' : '') + (perfilAccesibilidad != null and perfilAccesibilidad.tamanoTexto != null and perfilAccesibilidad.tamanoTexto.name() == 'GRANDE' ? 'texto-grande ' : '') + (perfilAccesibilidad != null and perfilAccesibilidad.soloAudio ? 'solo-audio ' : '')}">
+
+    <a href="#contenido-principal" class="skip-link">Saltar al contenido principal</a>
+
+    <header class="encabezado-sitio" role="banner">
+        <div class="contenedor-principal">
+            <div style="font-size: 1.5rem; font-weight: bold;">EcoAula</div>
+            <nav class="navegacion-principal" role="navigation" aria-label="Navegación principal">
+                <ul>
+                    <li sec:authorize="hasRole('GESTOR_CONTENIDO')"><a th:href="@{/gestor/cursos}">Gestión de contenido</a></li>
+                    <li sec:authorize="hasRole('REVISOR_ACCESIBILIDAD')"><a th:href="@{/revisor/cola}">Revisión de accesibilidad</a></li>
+                    <li sec:authorize="hasAnyRole('GESTOR_CONTENIDO','REVISOR_ACCESIBILIDAD')"><a th:href="@{/informes-revision}" aria-current="page">Informes de revisión</a></li>
+                    <li><a th:href="@{/reportes-barrera}">Reportes de barreras</a></li>
+                    <li><a th:href="@{/indicadores}">Indicadores</a></li>
+                    <li><a th:href="@{/perfil}">Mi Perfil</a></li>
+                    <li sec:authorize="isAuthenticated()">
+                        <form th:action="@{/logout}" method="post" style="display: inline;">
+                            <button type="submit" class="boton-secundario" style="min-height: 38px; padding: 0.25rem 0.75rem; font-size: 1rem;">Cerrar Sesión</button>
+                        </form>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main id="contenido-principal" class="contenedor-principal" role="main" tabindex="-1">
+        <h1>Informes de Revisión de Accesibilidad</h1>
+
+        <p>
+            Cada vez que el revisor aprueba o rechaza una versión se registra un informe con el resultado de cada criterio
+            del checklist WCAG 2.1 AA / NTC 5854. Los indicadores de calidad están en <a th:href="@{/indicadores}">Indicadores</a>.
+        </p>
+
+        <h2 th:text="'Informes registrados (' + ${#lists.size(informes)} + ')'">Informes registrados</h2>
+        <p th:if="${#lists.isEmpty(informes)}">Todavía no se ha registrado ninguna revisión.</p>
+
+        <ul class="lista-cursos">
+            <li th:each="inf : ${informes}" class="tarjeta-curso" th:with="v=${inf.version}">
+                <h3 style="font-size: 1.2rem; margin-top: 0;"
+                    th:text="'Lección ' + ${v.contenido.orden} + ': ' + ${v.contenido.titulo} + ' (versión ' + ${v.numeroVersion} + ')'">Lección</h3>
+                <p class="metadato-curso">
+                    <span th:text="'Curso: ' + ${v.contenido.curso.titulo}">Curso</span> ·
+                    <span th:text="${#temporals.format(inf.fecha, 'dd/MM/yyyy HH:mm')}">Fecha</span> ·
+                    <span th:text="'Revisor: ' + ${inf.revisor.nombreCompleto}">Revisor</span>
+                    <th:block th:if="${v.versionOrigen != null}"> · <span th:text="'Subsanación de la versión ' + ${v.versionOrigen.numeroVersion}">Subsanación</span></th:block>
+                </p>
+                <p>
+                    <strong th:text="${inf.resultado.name() == 'APROBADA'} ? 'Aprobada y publicada.' : 'Rechazada con motivo.'">Resultado</strong>
+                    <span th:text="${#sets.size(inf.itemsChequeados)} + ' de ' + ${totalCriterios} + ' criterios cumplidos.'">6 de 6</span>
+                </p>
+                <a th:href="@{/informes-revision/{id}(id=${inf.id})}" class="boton-secundario"
+                   th:attr="aria-label='Ver informe de la lección ' + ${v.contenido.titulo} + ', versión ' + ${v.numeroVersion}">Ver informe</a>
+            </li>
+        </ul>
+    </main>
+
+</body>
+</html>

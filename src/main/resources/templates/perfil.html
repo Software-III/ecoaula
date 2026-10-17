@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Perfil de Accesibilidad — EcoAula</title>
+    <link rel="stylesheet" th:href="@{/css/ecoaula.css}">
+</head>
+<body th:class="${(perfilAccesibilidad != null and perfilAccesibilidad.modoVisual != null and perfilAccesibilidad.modoVisual.name() == 'ALTO_CONTRASTE' ? 'modo-alto-contraste ' : '') + (perfilAccesibilidad != null and perfilAccesibilidad.tamanoTexto != null and perfilAccesibilidad.tamanoTexto.name() == 'GRANDE' ? 'texto-grande ' : '') + (perfilAccesibilidad != null and perfilAccesibilidad.soloAudio ? 'solo-audio ' : '')}">
+
+    <a href="#contenido-principal" class="skip-link">Saltar al contenido principal</a>
+
+    <header class="encabezado-sitio" role="banner">
+        <div class="contenedor-principal">
+            <div style="font-size: 1.5rem; font-weight: bold;">
+                <a th:href="@{/cursos}" style="text-decoration: none; color: inherit;">EcoAula</a>
+            </div>
+            <nav class="navegacion-principal" role="navigation" aria-label="Navegación principal">
+                <ul>
+                    <li><a th:href="@{/cursos}">Catálogo de Cursos</a></li>
+                    <li><a th:href="@{/perfil}" aria-current="page">Mi Perfil</a></li>
+                    <li><a th:href="@{/mis-reportes}">Mis reportes</a></li>
+                    <li><a th:href="@{/reportar-barrera(etapa='REGISTRO_MATRICULA')}">Reportar una barrera</a></li>
+                    <li>
+                        <form th:action="@{/logout}" method="post" style="display: inline;">
+                            <button type="submit" class="boton-secundario" style="min-height: 38px; padding: 0.25rem 0.75rem; font-size: 1rem;">Cerrar Sesión</button>
+                        </form>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main id="contenido-principal" class="contenedor-principal" role="main" tabindex="-1">
+        <h1>Mi Perfil de Accesibilidad</h1>
+
+        <div th:if="${mensajeExito != null}" class="alerta alerta-exito" role="status" aria-live="polite" th:text="${mensajeExito}"></div>
+
+        <p>Ajuste sus preferencias de visualización y audio. Los cambios se guardan de inmediato en su cuenta y se aplican en todas las páginas.</p>
+
+        <!-- Resumen accesible de errores del formulario -->
+        <div th:if="${#fields.hasErrors('${form.*}')}" class="resumen-errores" role="alert" tabindex="-1">
+            <h2>Por favor corrija los siguientes errores:</h2>
+            <ul>
+                <li th:each="err : ${#fields.errors('${form.*}')}" th:text="${err}">Error en el campo</li>
+            </ul>
+        </div>
+
+        <form th:action="@{/perfil}" th:object="${form}" method="post" novalidate>
+
+            <fieldset>
+                <legend>Preferencias de reproducción de audio</legend>
+                <div class="grupo-campo">
+                    <label for="velocidadAudio">Velocidad de reproducción de lecciones en audio</label>
+                    <select id="velocidadAudio" th:field="*{velocidadAudio}">
+                        <option value="0.75">0.75x (Pausado)</option>
+                        <option value="1.0">1.0x (Estándar)</option>
+                        <option value="1.25">1.25x (Ligeramente rápido)</option>
+                        <option value="1.5">1.5x (Rápido)</option>
+                        <option value="2.0">2.0x (Doble velocidad)</option>
+                    </select>
+                </div>
+
+                <div class="grupo-campo">
+                    <label for="vozLectura">Voz para la lectura en voz alta</label>
+                    <span id="ayuda-voz" class="ayuda-campo">
+                        Se usa al pulsar "Leer en voz alta" en las lecciones. Las voces disponibles dependen de su navegador
+                        y sistema operativo. No cambia la voz de su lector de pantalla, que se configura en el propio lector.
+                    </span>
+                    <select id="vozLectura" name="vozLectura" aria-describedby="ayuda-voz"
+                            data-selector-voz th:attr="data-voz-actual=${form.vozLectura}">
+                        <option value="">Voz predeterminada del navegador</option>
+                        <option th:if="${form.vozLectura != null and !#strings.isEmpty(form.vozLectura)}"
+                                th:value="${form.vozLectura}" th:text="${form.vozLectura}" selected>Voz guardada</option>
+                    </select>
+                </div>
+                <button type="button" class="boton-secundario" hidden
+                        data-probar-voz="vozLectura" data-velocidad-desde="velocidadAudio">Probar voz y velocidad</button>
+            </fieldset>
+
+            <fieldset>
+                <legend>Modo visual de contraste</legend>
+                <div class="opcion-seleccion">
+                    <input type="radio" id="modoEstandar" th:field="*{modoVisual}" value="ESTANDAR">
+                    <label for="modoEstandar">Modo estándar (fondo claro, alto contraste para texto)</label>
+                </div>
+                <div class="opcion-seleccion">
+                    <input type="radio" id="modoAltoContraste" th:field="*{modoVisual}" value="ALTO_CONTRASTE">
+                    <label for="modoAltoContraste">Modo alto contraste (fondo negro puro, elementos en amarillo brillante)</label>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>Tamaño de texto en pantalla</legend>
+                <div class="opcion-seleccion">
+                    <input type="radio" id="tamanoNormal" th:field="*{tamanoTexto}" value="NORMAL">
+                    <label for="tamanoNormal">Tamaño normal (18px adaptable a zoom)</label>
+                </div>
+                <div class="opcion-seleccion">
+                    <input type="radio" id="tamanoGrande" th:field="*{tamanoTexto}" value="GRANDE">
+                    <label for="tamanoGrande">Tamaño grande (22px tipografía aumentada)</label>
+                </div>
+            </fieldset>
+
+            <div class="grupo-campo opcion-seleccion">
+                <input type="checkbox" id="soloAudio" th:field="*{soloAudio}">
+                <label for="soloAudio">Priorizar modo solo audio</label>
+            </div>
+
+            <div style="margin-top: 2rem;">
+                <button type="submit" class="boton-principal">Guardar preferencias</button>
+            </div>
+        </form>
+
+        <div style="margin-top: 2rem;">
+            <a th:href="@{/cursos}" class="boton-secundario">Ir al catálogo de cursos</a>
+        </div>
+    </main>
+
+    <script th:src="@{/js/accesibilidad.js}" defer></script>
+</body>
+</html>

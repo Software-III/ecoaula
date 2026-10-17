@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'Matrícula Confirmada — ' + ${curso.titulo} + ' — EcoAula'">Matrícula Confirmada — EcoAula</title>
+    <link rel="stylesheet" th:href="@{/css/ecoaula.css}">
+</head>
+<body th:class="${(perfilAccesibilidad != null and perfilAccesibilidad.modoVisual != null and perfilAccesibilidad.modoVisual.name() == 'ALTO_CONTRASTE' ? 'modo-alto-contraste ' : '') + (perfilAccesibilidad != null and perfilAccesibilidad.tamanoTexto != null and perfilAccesibilidad.tamanoTexto.name() == 'GRANDE' ? 'texto-grande ' : '') + (perfilAccesibilidad != null and perfilAccesibilidad.soloAudio ? 'solo-audio ' : '')}">
+
+    <a href="#contenido-principal" class="skip-link">Saltar al contenido principal</a>
+
+    <header class="encabezado-sitio" role="banner">
+        <div class="contenedor-principal">
+            <div style="font-size: 1.5rem; font-weight: bold;">
+                <a th:href="@{/cursos}" style="text-decoration: none; color: inherit;">EcoAula</a>
+            </div>
+            <nav class="navegacion-principal" role="navigation" aria-label="Navegación principal">
+                <ul>
+                    <li><a th:href="@{/cursos}">Catálogo de Cursos</a></li>
+                    <li><a th:href="@{/perfil}">Mi Perfil</a></li>
+                    <li><a th:href="@{/reportar-barrera(etapa='CONTENIDO', curso=${curso.id})}">Reportar una barrera</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main id="contenido-principal" class="contenedor-principal" role="main" tabindex="-1">
+
+        <!-- Solo justo después de matricularse (atributo flash de la acción de matrícula) -->
+        <div th:if="${matriculaRecienCreada}" class="alerta alerta-exito" role="status" aria-live="polite">
+            ¡Su matrícula ha sido registrada con éxito! Ya tiene acceso completo al contenido del curso.
+        </div>
+
+        <h1 th:text="(${esConfirmacion} ? 'Matrícula Confirmada: ' : 'Mi curso: ') + ${curso.titulo}">Matrícula Confirmada</h1>
+
+        <!-- Siguiente paso según el avance del aprendiz -->
+        <section aria-labelledby="seccion-siguiente" class="tarjeta-curso">
+            <h2 id="seccion-siguiente" style="margin-top: 0;">Su avance</h2>
+            <p style="font-size: 1.15rem; font-weight: bold;"
+               th:text="${avance.completadas()} + ' de ' + ${avance.total()} + ' lecciones completadas.'">0 de 3 lecciones completadas.</p>
+
+            <th:block th:with="siguiente=${avance.siguientePendiente()}">
+                <p th:if="${certificado != null}">Aprobó la evaluación final y su certificado ya fue emitido.</p>
+                <p th:if="${certificado == null and avance.todasCompletadas()}">Completó todas las lecciones. Ya puede presentar la evaluación final.</p>
+
+                <a th:if="${certificado != null}" th:href="@{/certificados/{id}(id=${certificado.id})}" class="boton-principal">Ver mi certificado</a>
+                <a th:if="${certificado == null and avance.todasCompletadas()}" th:href="@{/matriculas/{id}/evaluacion(id=${matricula.id})}"
+                   class="boton-principal">Presentar evaluación final</a>
+                <a th:if="${certificado == null and siguiente != null and avance.sinIniciar()}"
+                   th:href="@{/cursos/{c}/lecciones/{n}(c=${curso.id}, n=${siguiente.orden()})}" class="boton-principal">Comenzar curso</a>
+                <a th:if="${certificado == null and siguiente != null and !avance.sinIniciar()}"
+                   th:href="@{/cursos/{c}/lecciones/{n}(c=${curso.id}, n=${siguiente.orden()})}" class="boton-principal"
+                   th:text="'Continuar con la lección ' + ${siguiente.orden()} + ': ' + ${siguiente.titulo()}">Continuar</a>
+            </th:block>
+        </section>
+
+        <!-- Lecciones del curso con su estado (texto, no solo color) -->
+        <section aria-labelledby="seccion-lecciones" style="margin-top: 2rem;">
+            <h2 id="seccion-lecciones">Lecciones del curso</h2>
+            <ol>
+                <li th:each="l : ${avance.lecciones()}" style="margin-bottom: 0.5rem;">
+                    <a th:href="@{/cursos/{c}/lecciones/{n}(c=${curso.id}, n=${l.orden()})}" th:text="${l.titulo()}">Lección</a>
+                    <span th:text="${l.completada()} ? ' (completada)' : ' (pendiente)'"> (pendiente)</span>
+                </li>
+            </ol>
+        </section>
+
+        <section aria-labelledby="seccion-resumen" class="tarjeta-curso" style="margin-top: 2rem;">
+            <h2 id="seccion-resumen" style="margin-top: 0;">Resumen del curso</h2>
+            <ul>
+                <li><strong>Curso:</strong> <span th:text="${curso.titulo}">Fundamentos de Ofimática</span></li>
+                <li><strong>Duración estimada:</strong> <span th:text="${curso.horas} + ' horas'">10 horas</span></li>
+                <li><strong>Modalidad:</strong> <span th:text="${curso.modalidad}">Virtual accesible</span></li>
+                <li><strong>Área de estudio:</strong> <span th:text="${curso.area}">Tecnología</span></li>
+                <li><strong>Estado de la matrícula:</strong> <span th:text="${matricula.estado}">ACTIVA</span></li>
+            </ul>
+        </section>
+
+        <section th:if="${esConfirmacion}" aria-labelledby="seccion-pasos" style="margin-top: 2rem;">
+            <h2 id="seccion-pasos">Próximos pasos</h2>
+            <ol>
+                <li><strong>Consumir las lecciones:</strong> Cada lección cuenta con audio nativo y transcripción completa para lectura o descarga en texto (.txt).</li>
+                <li><strong>Completar el 100% del contenido:</strong> Debe marcar cada lección como completada para registrar su avance de aprendizaje. Su avance se guarda y puede continuar donde lo dejó.</li>
+                <li><strong>Presentar la evaluación final:</strong> Al finalizar todas las lecciones se habilitará el cuestionario accesible de opción múltiple.</li>
+                <li><strong>Obtener su certificado:</strong> Al aprobar la evaluación con el 70% o más, se emitirá su certificado verificable con código único.</li>
+            </ol>
+        </section>
+
+        <p style="margin-top: 2rem;"><a th:href="@{/cursos}">Volver al catálogo de cursos</a></p>
+
+    </main>
+
+</body>
+</html>

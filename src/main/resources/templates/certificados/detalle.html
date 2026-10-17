@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'Certificado — ' + ${curso.titulo} + ' — ' + ${aprendiz.nombreCompleto} + ' — EcoAula'">Certificado de Aprobación — EcoAula</title>
+    <link rel="stylesheet" th:href="@{/css/ecoaula.css}">
+</head>
+<body th:class="${(perfilAccesibilidad != null and perfilAccesibilidad.modoVisual != null and perfilAccesibilidad.modoVisual.name() == 'ALTO_CONTRASTE' ? 'modo-alto-contraste ' : '') + (perfilAccesibilidad != null and perfilAccesibilidad.tamanoTexto != null and perfilAccesibilidad.tamanoTexto.name() == 'GRANDE' ? 'texto-grande ' : '') + (perfilAccesibilidad != null and perfilAccesibilidad.soloAudio ? 'solo-audio ' : '')}">
+
+    <a href="#contenido-principal" class="skip-link">Saltar al contenido principal</a>
+
+    <header class="encabezado-sitio" role="banner">
+        <div class="contenedor-principal">
+            <div style="font-size: 1.5rem; font-weight: bold;">
+                <a th:href="@{/cursos}" style="text-decoration: none; color: inherit;">EcoAula</a>
+            </div>
+            <nav class="navegacion-principal" role="navigation" aria-label="Navegación principal">
+                <ul>
+                    <li><a th:href="@{/cursos}">Catálogo de Cursos</a></li>
+                    <li><a th:href="@{/perfil}">Mi Perfil</a></li>
+                    <li><a th:href="@{/reportar-barrera(etapa='EVALUACION_CERTIFICADO')}">Reportar una barrera</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main id="contenido-principal" class="contenedor-principal" role="main" tabindex="-1">
+
+        <h1>Certificado de Aprobación</h1>
+
+        <div class="alerta alerta-exito" role="status" aria-live="polite">
+            Su certificado ha sido generado oficialmente con código de autenticidad verificable.
+        </div>
+
+        <!-- Certificado renderizado en texto HTML real (ADR-06: Nunca imagen) -->
+        <article class="certificado-caja" aria-label="Certificado oficial de estudios">
+            <p style="font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.5rem;">
+                República de Colombia — Plataforma EcoAula
+            </p>
+
+            <h2 style="font-size: 1.6rem; margin-top: 0.5rem; margin-bottom: 1.5rem;">
+                Certificado de Acreditación de Aprendizaje
+            </h2>
+
+            <p style="font-size: 1.1rem; margin-bottom: 0.5rem;">Se hace constar que el/la aprendiz:</p>
+            
+            <p style="font-size: 1.5rem; font-weight: bold; margin-bottom: 1.5rem; text-transform: uppercase;"
+               th:text="${aprendiz.nombreCompleto}">
+                NOMBRE DEL APRENDIZ
+            </p>
+
+            <p style="font-size: 1.1rem; margin-bottom: 0.5rem;">Ha cursado y aprobado satisfactoriamente los contenidos y evaluación de:</p>
+            
+            <p style="font-size: 1.35rem; font-weight: bold; margin-bottom: 1.5rem;"
+               th:text="${curso.titulo}">
+                NOMBRE DEL CURSO
+            </p>
+
+            <p style="margin-bottom: 0.5rem;">
+                <strong>Intensidad horaria:</strong> <span th:text="${curso.horas} + ' horas académicas'">10 horas</span>
+            </p>
+            <p style="margin-bottom: 0.5rem;">
+                <strong>Modalidad:</strong> <span th:text="${curso.modalidad}">Virtual accesible</span>
+            </p>
+            <p style="margin-bottom: 1.5rem;">
+                <strong>Fecha de emisión:</strong> <span th:text="${#temporals.format(certificado.emitidoEn, 'dd/MM/yyyy HH:mm')}">01/01/2026</span>
+            </p>
+
+            <div style="margin: 1.5rem 0; padding: 1rem; border: 2px dashed var(--color-borde); border-radius: 4px;">
+                <label for="codigo-texto" style="font-size: 1rem; display: block; margin-bottom: 0.5rem;">Código único de verificación (impredecible):</label>
+                <div id="codigo-texto" class="codigo-verificacion" th:text="${certificado.codigoVerificacion}">
+                    EA-XXXX-XXXX-XXXX-XXXX
+                </div>
+            </div>
+        </article>
+
+        <!-- Botones de acción principales -->
+        <section aria-label="Acciones del certificado" style="display: flex; flex-direction: column; gap: 1rem; max-width: 480px; margin-top: 2rem;">
+            <a th:href="@{/certificados/{id}/descargar(id=${certificado.id})}" class="boton-principal">
+                📥 Descargar certificado en texto plano (.txt)
+            </a>
+
+            <a th:href="@{/verificar(codigo=${certificado.codigoVerificacion})}" class="boton-secundario">
+                🔍 Verificar autenticidad en línea
+            </a>
+
+            <a th:href="@{/cursos}" class="boton-secundario">
+                Volver al catálogo de cursos
+            </a>
+        </section>
+
+    </main>
+
+</body>
+</html>

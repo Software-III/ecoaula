@@ -1,0 +1,15 @@
+[Unit]
+Description=EcoAula Spring Boot Application (Produccion)
+After=network.target
+
+[Service]
+User=ubuntu
+WorkingDirectory=/home/ubuntu/ecoaula
+EnvironmentFile=/etc/ecoaula/ecoaula.env
+ExecStart=/usr/bin/java -Dspring.profiles.active=prod -Xms512m -Xmx1024m -jar /home/ubuntu/ecoaula/target/ecoaula-0.0.1-SNAPSHOT.jar
+SuccessExitStatus=143
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
