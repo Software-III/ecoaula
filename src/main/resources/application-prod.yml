@@ -11,3 +11,12 @@ spring:
 ecoaula:
   seguridad:
     clave-cifrado: ${ECOAULA_CLAVE_CIFRADO}
+  # Cuentas demo en producción: solo se crean las que tengan su variable de entorno con una contraseña
+  # propia (12 o más caracteres, distinta de las de desarrollo). No se restablecen al arrancar.
+  seed:
+    habilitado: ${ECOAULA_SEED_HABILITADO:true}
+    sincronizar-contrasenas: ${ECOAULA_SEED_SINCRONIZAR_CONTRASENAS:false}
+    aprendiz-password: ${ECOAULA_SEED_APRENDIZ_PASSWORD:}
+    gestor-password: ${ECOAULA_SEED_GESTOR_PASSWORD:}
+    revisor-password: ${ECOAULA_SEED_REVISOR_PASSWORD:}
+    coordinador-password: ${ECOAULA_SEED_COORDINADOR_PASSWORD:}

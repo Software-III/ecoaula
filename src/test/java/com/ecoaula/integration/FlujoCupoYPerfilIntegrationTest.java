@@ -8,6 +8,13 @@ import com.ecoaula.repository.AprendizRepository;
 import com.ecoaula.repository.CursoRepository;
 import com.ecoaula.repository.MatriculaRepository;
 import com.ecoaula.repository.PerfilAccesibilidadRepository;
+import com.ecoaula.repository.ContenidoRepository;
+import com.ecoaula.repository.ContenidoVersionRepository;
+import com.ecoaula.repository.RecursoImagenRepository;
+import com.ecoaula.model.Contenido;
+import com.ecoaula.model.ContenidoVersion;
+import com.ecoaula.model.RecursoImagen;
+import com.ecoaula.model.enums.EstadoContenido;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +28,7 @@ import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import java.time.LocalDateTime;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -54,6 +62,15 @@ class FlujoCupoYPerfilIntegrationTest {
 
     @Autowired
     private PerfilAccesibilidadRepository perfilRepository;
+
+    @Autowired
+    private ContenidoRepository contenidoRepository;
+
+    @Autowired
+    private ContenidoVersionRepository versionRepository;
+
+    @Autowired
+    private RecursoImagenRepository imagenRepository;
 
     @Test
     @DisplayName("Con el cupo lleno el catálogo no ofrece la matrícula y el servidor la rechaza")
@@ -138,6 +155,48 @@ class FlujoCupoYPerfilIntegrationTest {
 
         // El script es público, como las hojas de estilo
         mockMvc.perform(get("/js/accesibilidad.js")).andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("Modo solo audio: aviso, imágenes como texto (sin descargarlas) y sin datos técnicos; desactivado, imágenes normales")
+    void modoSoloAudio() throws Exception {
+        // Lección publicada con una imagen
+        Curso servicio = curso("Atención al Cliente");
+        Contenido leccion = contenidoRepository.findByCursoIdAndOrden(servicio.getId(), 1).orElseThrow();
+        ContenidoVersion vigente = versionRepository.findByContenidoIdAndEstado(leccion.getId(), EstadoContenido.PUBLICADA).orElseThrow();
+        if (imagenRepository.findByContenidoVersionIdOrderByOrdenAsc(vigente.getId()).isEmpty()) {
+            imagenRepository.save(new RecursoImagen(vigente, "imagen-solo-audio.png", "Persona guiando a otra del brazo",
+                    "La persona guía camina medio paso adelante y ofrece el codo.", 1));
+        }
+        String correo = "solo-audio-" + System.nanoTime() + "@ecoaula.local";
+        RequestPostProcessor aprendiz = aprendizNuevo(correo);
+        mockMvc.perform(post("/cursos/{id}/matricular", servicio.getId()).with(aprendiz).with(csrf()))
+                .andExpect(status().is3xxRedirection());
+
+        // Activado
+        mockMvc.perform(post("/perfil").with(aprendiz).with(csrf())
+                        .param("velocidadAudio", "1.0").param("modoVisual", "ESTANDAR").param("tamanoTexto", "NORMAL")
+                        .param("soloAudio", "true"))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/cursos/{id}/lecciones/1", servicio.getId()).with(aprendiz))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("class=\"solo-audio \"")))
+                .andExpect(content().string(containsString("Modo solo audio activo")))
+                .andExpect(content().string(containsString("Descripción de las imágenes de la lección")))
+                .andExpect(content().string(containsString("Persona guiando a otra del brazo.")))
+                .andExpect(content().string(containsString("Descripción detallada: La persona guía camina medio paso adelante")))
+                .andExpect(content().string(not(containsString("/imagenes/imagen-solo-audio.png"))))
+                .andExpect(content().string(not(containsString("Versión del contenido consumida"))));
+
+        // Desactivado
+        mockMvc.perform(post("/perfil").with(aprendiz).with(csrf())
+                        .param("velocidadAudio", "1.0").param("modoVisual", "ESTANDAR").param("tamanoTexto", "NORMAL"))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/cursos/{id}/lecciones/1", servicio.getId()).with(aprendiz))
+                .andExpect(content().string(not(containsString("Modo solo audio activo"))))
+                .andExpect(content().string(containsString("/imagenes/imagen-solo-audio.png")))
+                .andExpect(content().string(containsString("alt=\"Persona guiando a otra del brazo\"")))
+                .andExpect(content().string(containsString("Versión del contenido consumida")));
     }
 
     private MockHttpServletRequestBuilder editarCurso(Curso curso, String cupo) {

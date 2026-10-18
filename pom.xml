@@ -22,6 +22,21 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <jacoco.version>0.8.12</jacoco.version>
+
+        <!-- Umbrales de cobertura (RNF-10 y RNF-11 del Plan de Calidad): el build falla si se incumplen -->
+        <cobertura.minima.lineas>0.80</cobertura.minima.lineas>
+        <cobertura.minima.ramas>0.60</cobertura.minima.ramas>
+        <cobertura.minima.lineas.modulos-criticos>0.85</cobertura.minima.lineas.modulos-criticos>
+        <cobertura.minima.ramas.modulos-criticos>0.60</cobertura.minima.ramas.modulos-criticos>
+
+        <!-- SonarCloud (análisis estático y Quality Gate). Verificar organización y clave en sonarcloud.io -->
+        <sonar.organization>software-iii</sonar.organization>
+        <sonar.projectKey>Software-III_ecoaula</sonar.projectKey>
+        <sonar.projectName>EcoAula</sonar.projectName>
+        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+        <sonar.coverage.jacoco.xmlReportPaths>${project.build.directory}/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+        <!-- Mismas exclusiones que JaCoCo: datos de demostración y clase de arranque no son lógica a probar -->
+        <sonar.coverage.exclusions>**/config/DataInitializer.java,**/config/DatosPruebaRevisionInitializer.java,**/EcoaulaApplication.java</sonar.coverage.exclusions>
     </properties>
 
     <dependencies>
@@ -106,6 +121,14 @@
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>${jacoco.version}</version>
+                <configuration>
+                    <!-- Los datos de demostración se ejecutan en cada prueba e inflarían la cobertura -->
+                    <excludes>
+                        <exclude>com/ecoaula/config/DataInitializer*</exclude>
+                        <exclude>com/ecoaula/config/DatosPruebaRevisionInitializer*</exclude>
+                        <exclude>com/ecoaula/EcoaulaApplication*</exclude>
+                    </excludes>
+                </configuration>
                 <executions>
                     <execution>
                         <goals>
@@ -118,6 +141,54 @@
                         <goals>
                             <goal>report</goal>
                         </goals>
+                    </execution>
+                    <execution>
+                        <id>umbral-cobertura</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <!-- Todo el proyecto -->
+                                <rule>
+                                    <element>BUNDLE</element>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${cobertura.minima.lineas}</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${cobertura.minima.ramas}</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                                <!-- Módulos críticos: matrícula (RNF-11) y evaluación/certificación (RNF-10) -->
+                                <rule>
+                                    <element>CLASS</element>
+                                    <includes>
+                                        <include>com.ecoaula.service.MatriculaService</include>
+                                        <include>com.ecoaula.service.EvaluacionService</include>
+                                        <include>com.ecoaula.service.CertificacionService</include>
+                                    </includes>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${cobertura.minima.lineas.modulos-criticos}</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${cobertura.minima.ramas.modulos-criticos}</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                            </rules>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>

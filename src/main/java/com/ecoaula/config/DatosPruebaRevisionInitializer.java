@@ -276,7 +276,17 @@ public class DatosPruebaRevisionInitializer implements CommandLineRunner {
     }
 
     /** Archivo en memoria para usar los mismos servicios que el formulario del gestor. */
-    private record ArchivoEnMemoria(String nombre, String tipo, byte[] datos) implements MultipartFile {
+    private static final class ArchivoEnMemoria implements MultipartFile {
+        private final String nombre;
+        private final String tipo;
+        private final byte[] datos;
+
+        private ArchivoEnMemoria(String nombre, String tipo, byte[] datos) {
+            this.nombre = nombre;
+            this.tipo = tipo;
+            this.datos = datos;
+        }
+
         @Override
         public String getName() {
             return "archivoAudio";

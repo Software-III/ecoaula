@@ -241,10 +241,11 @@ public class GestionContenidoService {
         if (titulo == null || titulo.isBlank()) {
             throw new ReglaNegocioException("El título de la lección es obligatorio.");
         }
-        // La lección siempre se agrega al final: la navegación del aprendiz recorre las lecciones 1, 2, 3… sin huecos
-        orden = (int) contenidoRepository.countByCursoId(cursoId) + 1;
+        // La lección siempre se agrega al final (se ignora el orden recibido): la navegación del aprendiz
+        // recorre las lecciones 1, 2, 3… sin huecos
+        int ordenAlFinal = (int) contenidoRepository.countByCursoId(cursoId) + 1;
 
-        Contenido contenido = new Contenido(titulo.trim(), orden, curso);
+        Contenido contenido = new Contenido(titulo.trim(), ordenAlFinal, curso);
         contenido = contenidoRepository.save(contenido);
 
         // Crear automáticamente la versión 1 en estado BORRADOR

@@ -41,6 +41,12 @@
 
         <h1 th:text="'Lección ' + ${orden} + ': ' + ${leccion.titulo}">Título de la Lección</h1>
 
+        <!-- Modo solo audio (perfil de accesibilidad, ADR-07) -->
+        <p th:if="${perfilAccesibilidad.soloAudio}" class="alerta" role="note">
+            Modo solo audio activo: la lección se centra en el reproductor y la transcripción, y las imágenes se presentan
+            como texto. Puede desactivarlo en <a th:href="@{/perfil}">Mi Perfil</a>.
+        </p>
+
         <!-- Reproductor de audio nativo (ADR-05) -->
         <section aria-labelledby="seccion-audio-titulo" class="seccion-audio">
             <h2 id="seccion-audio-titulo" style="font-size: 1.25rem;">Audio explicativo de la lección</h2>
@@ -59,7 +65,7 @@
                 Puede cambiarla en <a th:href="@{/perfil}">Mi Perfil</a>.
             </p>
 
-            <p style="font-size: 0.95rem; color: var(--color-texto-secundario);">
+            <p th:unless="${perfilAccesibilidad.soloAudio}" style="font-size: 0.95rem; color: var(--color-texto-secundario);">
                 Versión del contenido consumida: <span th:text="'v' + ${version.numeroVersion}">v1</span> (ADR-08).
             </p>
         </section>
@@ -89,8 +95,19 @@
 
         <!-- Imágenes con alternativa textual (WCAG 1.1.1) -->
         <section th:if="${!#lists.isEmpty(imagenes)}" aria-labelledby="seccion-imagenes-titulo" style="margin-top: 2rem;">
-            <h2 id="seccion-imagenes-titulo" style="font-size: 1.25rem;">Imágenes de la lección</h2>
-            <figure th:each="img, it : ${imagenes}" class="figura-leccion">
+            <h2 id="seccion-imagenes-titulo" style="font-size: 1.25rem;"
+                th:text="${perfilAccesibilidad.soloAudio} ? 'Descripción de las imágenes de la lección' : 'Imágenes de la lección'">Imágenes de la lección</h2>
+
+            <!-- Modo solo audio: las imágenes se presentan como texto y no se descargan -->
+            <ol th:if="${perfilAccesibilidad.soloAudio}">
+                <li th:each="img : ${imagenes}">
+                    <span th:text="${img.textoAlternativo} + '.'">Texto alternativo.</span>
+                    <span th:if="${img.descripcionDetallada != null}" style="display: block; white-space: pre-line;"
+                          th:text="'Descripción detallada: ' + ${img.descripcionDetallada}">Descripción</span>
+                </li>
+            </ol>
+
+            <figure th:unless="${perfilAccesibilidad.soloAudio}" th:each="img, it : ${imagenes}" class="figura-leccion">
                 <img th:src="@{/imagenes/{archivo}(archivo=${img.rutaArchivo})}" th:alt="${img.textoAlternativo}">
                 <figcaption th:if="${img.descripcionDetallada != null}" style="white-space: pre-line;"
                             th:text="'Descripción detallada de la imagen ' + ${it.count} + ': ' + ${img.descripcionDetallada}">Descripción</figcaption>

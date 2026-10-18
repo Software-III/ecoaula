@@ -35,13 +35,21 @@ DB_NAME=ecoaula_db
 DB_USER=ecoaula_user
 DB_PASSWORD=ecoaula_secret
 
-# Clave Maestra de Cifrado AES-256 (ADR-09) - Generada criptográficamente (fuera del repositorio)
-ECOAULA_CLAVE_CIFRADO=k8F#m9$vL2!xP0@qW7^zR4*yB1&cT5(e
+# Clave Maestra de Cifrado AES-256 (ADR-09). Generarla en el servidor y no escribirla en el repositorio:
+#   openssl rand -base64 32
+ECOAULA_CLAVE_CIFRADO=<valor generado en el servidor>
 
-# Contraseñas de Cuentas de Demostración para Producción
-ECOAULA_SEED_APRENDIZ_PASSWORD=Aprendiz#Seguro2026!
-ECOAULA_SEED_GESTOR_PASSWORD=Gestor#Seguro2026!
-ECOAULA_SEED_REVISOR_PASSWORD=Revisor#Seguro2026!
+# Cuentas de demostración en producción (DataInitializer).
+# - Solo se crea la cuenta cuya variable esté definida con una contraseña propia de 12 o más caracteres,
+#   distinta de las de desarrollo del repositorio; si falta o no cumple, esa cuenta se omite (aviso en el log).
+# - Las contraseñas se usan al crear la cuenta y NO se restablecen en cada arranque. Para cambiarlas de nuevo
+#   desde aquí, arrancar una vez con ECOAULA_SEED_SINCRONIZAR_CONTRASENAS=true.
+# - Para no sembrar nada (ni cuentas ni cursos de demostración): ECOAULA_SEED_HABILITADO=false
+ECOAULA_SEED_HABILITADO=true
+ECOAULA_SEED_APRENDIZ_PASSWORD=<contraseña propia, 12+ caracteres>
+ECOAULA_SEED_GESTOR_PASSWORD=<contraseña propia, 12+ caracteres>
+ECOAULA_SEED_REVISOR_PASSWORD=<contraseña propia, 12+ caracteres>
+ECOAULA_SEED_COORDINADOR_PASSWORD=<contraseña propia, 12+ caracteres>
 
 # Seguridad de Sesión
 COOKIE_SECURE=true
