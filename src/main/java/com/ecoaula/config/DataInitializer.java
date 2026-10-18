@@ -10,15 +10,24 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 
 /**
- * Inicializador de datos de demostración para perfiles de desarrollo (dev, dev-h2).
+ * Inicializador de datos de demostración (perfiles dev, dev-h2 y prod).
  * Presenta todos los cursos y contenidos explícitamente como datos de demostración.
+ * <p>
+ * En producción ninguna cuenta demo se crea con una contraseña conocida: cada contraseña debe venir de su
+ * variable de entorno, no puede ser una de las de desarrollo y debe tener al menos 12 caracteres; si no,
+ * esa cuenta se omite. Además, en producción las contraseñas no se restablecen al arrancar
+ * ({@code ecoaula.seed.sincronizar-contrasenas=false}) y la siembra se puede apagar con
+ * {@code ecoaula.seed.habilitado=false}.
  */
 @Component
 @Profile({"dev", "dev-h2", "prod"})
@@ -36,6 +45,19 @@ public class DataInitializer implements CommandLineRunner {
     private final OpcionPreguntaRepository opcionRepository;
     private final PasswordEncoder passwordEncoder;
     private final AlmacenamientoContenido almacenamientoContenido;
+    private final Environment environment;
+
+    /** Contraseñas de desarrollo publicadas en el repositorio: nunca válidas en producción. */
+    private static final Set<String> CONTRASENAS_DE_DESARROLLO =
+            Set.of("EcoAula2026!", "GestorEcoAula2026!", "RevisorEcoAula2026!", "CoordinadorEcoAula2026!");
+    private static final int LONGITUD_MINIMA_EN_PRODUCCION = 12;
+
+    @org.springframework.beans.factory.annotation.Value("${ecoaula.seed.habilitado:true}")
+    private boolean siembraHabilitada;
+
+    @org.springframework.beans.factory.annotation.Value("${ecoaula.seed.sincronizar-contrasenas:true}")
+    private boolean sincronizarContrasenas;
+
 
     @org.springframework.beans.factory.annotation.Value("${ecoaula.seed.aprendiz-password:EcoAula2026!}")
     private String passwordAprendiz;
@@ -57,7 +79,8 @@ public class DataInitializer implements CommandLineRunner {
                            PreguntaRepository preguntaRepository,
                            OpcionPreguntaRepository opcionRepository,
                            PasswordEncoder passwordEncoder,
-                           AlmacenamientoContenido almacenamientoContenido) {
+                           AlmacenamientoContenido almacenamientoContenido,
+                           Environment environment) {
         this.aprendizRepository = aprendizRepository;
         this.cursoRepository = cursoRepository;
         this.contenidoRepository = contenidoRepository;
@@ -67,65 +90,86 @@ public class DataInitializer implements CommandLineRunner {
         this.opcionRepository = opcionRepository;
         this.passwordEncoder = passwordEncoder;
         this.almacenamientoContenido = almacenamientoContenido;
+        this.environment = environment;
     }
 
     @Override
     @Transactional
     public void run(String... args) {
-        crearCoordinadorSiNoExiste();
+        if (!siembraHabilitada) {
+            log.info("Siembra de datos de demostración deshabilitada (ecoaula.seed.habilitado=false).");
+            return;
+        }
+        String claveAprendiz = contrasenaSembrable("aprendiz", "ECOAULA_SEED_APRENDIZ_PASSWORD", passwordAprendiz);
+        String claveGestor = contrasenaSembrable("gestor", "ECOAULA_SEED_GESTOR_PASSWORD", passwordGestor);
+        String claveRevisor = contrasenaSembrable("revisor", "ECOAULA_SEED_REVISOR_PASSWORD", passwordRevisor);
+        String claveCoordinador = contrasenaSembrable("coordinador", "ECOAULA_SEED_COORDINADOR_PASSWORD", passwordCoordinador);
+
+        crearCoordinadorSiNoExiste(claveCoordinador);
 
         if (cursoRepository.count() > 0) {
-            actualizarContrasenasDemo();
-            log.info("Datos de demostración ya existen. Contraseñas de demo sincronizadas.");
+            if (sincronizarContrasenas) {
+                actualizarContrasenasDemo(claveAprendiz, claveGestor, claveRevisor, claveCoordinador);
+                log.info("Datos de demostración ya existen. Contraseñas de demo sincronizadas.");
+            } else {
+                log.info("Datos de demostración ya existen. Las contraseñas de las cuentas demo no se modifican.");
+            }
             return;
         }
 
         log.info("Inicializando datos de demostración para EcoAula...");
 
-        // 1. Crear Aprendiz de Demostración
-        Aprendiz demo = new Aprendiz();
-        demo.setNombreCompleto("Aprendiz de Demostración");
-        demo.setCorreo("aprendiz@ecoaula.local");
-        demo.setTelefono("3001234567");
-        demo.setPasswordHash(passwordEncoder.encode(passwordAprendiz));
-        demo.setRol(Rol.APRENDIZ);
-        demo.setCondicionVisual("Baja visión severa con necesidad de alto contraste");
-        demo.setConsentimientoDatos(true);
-        demo.setFechaConsentimiento(LocalDateTime.now());
+        // 1. Crear Aprendiz de Demostración (solo con contraseña válida)
+        if (claveAprendiz != null) {
+            Aprendiz demo = new Aprendiz();
+            demo.setNombreCompleto("Aprendiz de Demostración");
+            demo.setCorreo("aprendiz@ecoaula.local");
+            demo.setTelefono("3001234567");
+            demo.setPasswordHash(passwordEncoder.encode(claveAprendiz));
+            demo.setRol(Rol.APRENDIZ);
+            demo.setCondicionVisual("Baja visión severa con necesidad de alto contraste");
+            demo.setConsentimientoDatos(true);
+            demo.setFechaConsentimiento(LocalDateTime.now());
 
-        PerfilAccesibilidad perfil = new PerfilAccesibilidad(demo);
-        perfil.setVelocidadAudio(1.0);
-        perfil.setModoVisual(ModoVisual.ESTANDAR);
-        perfil.setTamanoTexto(TamanoTexto.NORMAL);
-        perfil.setSoloAudio(false);
-        demo.setPerfilAccesibilidad(perfil);
+            PerfilAccesibilidad perfil = new PerfilAccesibilidad(demo);
+            perfil.setVelocidadAudio(1.0);
+            perfil.setModoVisual(ModoVisual.ESTANDAR);
+            perfil.setTamanoTexto(TamanoTexto.NORMAL);
+            perfil.setSoloAudio(false);
+            demo.setPerfilAccesibilidad(perfil);
 
-        aprendizRepository.save(demo);
-        log.info("Aprendiz de prueba inicializado: {}", demo.getCorreo());
+            aprendizRepository.save(demo);
+            log.info("Aprendiz de prueba inicializado: {}", demo.getCorreo());
+        }
 
-        // 1.1 Crear Gestor de Contenido de Demostración
-        Aprendiz gestor = new Aprendiz();
-        gestor.setNombreCompleto("Gestor de Contenido Demo");
-        gestor.setCorreo("gestor@ecoaula.local");
-        gestor.setTelefono("3009876543");
-        gestor.setPasswordHash(passwordEncoder.encode(passwordGestor));
-        gestor.setRol(Rol.GESTOR_CONTENIDO);
-        gestor.setConsentimientoDatos(true);
-        gestor.setFechaConsentimiento(LocalDateTime.now());
-        gestor = aprendizRepository.save(gestor);
-        log.info("Gestor de contenido inicializado: {}", gestor.getCorreo());
+        // 1.1 Crear Gestor de Contenido de Demostración (autor de las lecciones; puede quedar sin crear)
+        Aprendiz gestor = null;
+        if (claveGestor != null) {
+            gestor = new Aprendiz();
+            gestor.setNombreCompleto("Gestor de Contenido Demo");
+            gestor.setCorreo("gestor@ecoaula.local");
+            gestor.setTelefono("3009876543");
+            gestor.setPasswordHash(passwordEncoder.encode(claveGestor));
+            gestor.setRol(Rol.GESTOR_CONTENIDO);
+            gestor.setConsentimientoDatos(true);
+            gestor.setFechaConsentimiento(LocalDateTime.now());
+            gestor = aprendizRepository.save(gestor);
+            log.info("Gestor de contenido inicializado: {}", gestor.getCorreo());
+        }
 
         // 1.2 Crear Revisor de Accesibilidad de Demostración
-        Aprendiz revisor = new Aprendiz();
-        revisor.setNombreCompleto("Revisor de Accesibilidad Demo");
-        revisor.setCorreo("revisor@ecoaula.local");
-        revisor.setTelefono("3005551234");
-        revisor.setPasswordHash(passwordEncoder.encode(passwordRevisor));
-        revisor.setRol(Rol.REVISOR_ACCESIBILIDAD);
-        revisor.setConsentimientoDatos(true);
-        revisor.setFechaConsentimiento(LocalDateTime.now());
-        aprendizRepository.save(revisor);
-        log.info("Revisor de accesibilidad inicializado: {}", revisor.getCorreo());
+        if (claveRevisor != null) {
+            Aprendiz revisor = new Aprendiz();
+            revisor.setNombreCompleto("Revisor de Accesibilidad Demo");
+            revisor.setCorreo("revisor@ecoaula.local");
+            revisor.setTelefono("3005551234");
+            revisor.setPasswordHash(passwordEncoder.encode(claveRevisor));
+            revisor.setRol(Rol.REVISOR_ACCESIBILIDAD);
+            revisor.setConsentimientoDatos(true);
+            revisor.setFechaConsentimiento(LocalDateTime.now());
+            aprendizRepository.save(revisor);
+            log.info("Revisor de accesibilidad inicializado: {}", revisor.getCorreo());
+        }
 
         // 2. Generar archivo de audio base para demostraciones
         byte[] audioWav = AudioDemoGenerator.generarTonoSuaveWav(6, 440.0);
@@ -218,22 +262,22 @@ public class DataInitializer implements CommandLineRunner {
         versionRepository.save(v);
     }
 
-    private void crearCoordinadorSiNoExiste() {
+    private void crearCoordinadorSiNoExiste(String clave) {
         String correo = "coordinador@ecoaula.local";
-        if (aprendizRepository.existsByCorreo(correo)) {
+        if (clave == null || aprendizRepository.existsByCorreo(correo)) {
             return;
         }
         Aprendiz coordinador = new Aprendiz();
         coordinador.setNombreCompleto("Coordinación de Matrícula de Demostración");
         coordinador.setCorreo(correo);
         coordinador.setTelefono("3000000000");
-        coordinador.setPasswordHash(passwordEncoder.encode(passwordCoordinador));
+        coordinador.setPasswordHash(passwordEncoder.encode(clave));
         coordinador.setRol(Rol.COORDINADOR);
         coordinador.setConsentimientoDatos(true);
         coordinador.setFechaConsentimiento(LocalDateTime.now());
         coordinador.setPerfilAccesibilidad(new PerfilAccesibilidad(coordinador));
         aprendizRepository.save(coordinador);
-        log.info("Coordinación de matrícula creada: {} / CoordinadorEcoAula2026!", correo);
+        log.info("Coordinación de matrícula inicializada: {}", correo);
     }
 
     private void crearEvaluacionOfimatica(Curso curso) {
@@ -355,22 +399,41 @@ public class DataInitializer implements CommandLineRunner {
         opcionRepository.save(new OpcionPregunta(p, opc4, "Opción 4", b4));
     }
 
-    private void actualizarContrasenasDemo() {
-        aprendizRepository.findByCorreo("aprendiz@ecoaula.local").ifPresent(a -> {
-            a.setPasswordHash(passwordEncoder.encode(passwordAprendiz));
-            aprendizRepository.save(a);
+    /** Restablece las contraseñas de las cuentas demo (solo las que tienen una contraseña válida). */
+    private void actualizarContrasenasDemo(String claveAprendiz, String claveGestor, String claveRevisor, String claveCoordinador) {
+        sincronizar("aprendiz@ecoaula.local", claveAprendiz);
+        sincronizar("gestor@ecoaula.local", claveGestor);
+        sincronizar("revisor@ecoaula.local", claveRevisor);
+        sincronizar("coordinador@ecoaula.local", claveCoordinador);
+    }
+
+    private void sincronizar(String correo, String clave) {
+        if (clave == null) {
+            return;
+        }
+        aprendizRepository.findByCorreo(correo).ifPresent(cuenta -> {
+            cuenta.setPasswordHash(passwordEncoder.encode(clave));
+            aprendizRepository.save(cuenta);
         });
-        aprendizRepository.findByCorreo("gestor@ecoaula.local").ifPresent(g -> {
-            g.setPasswordHash(passwordEncoder.encode(passwordGestor));
-            aprendizRepository.save(g);
-        });
-        aprendizRepository.findByCorreo("revisor@ecoaula.local").ifPresent(r -> {
-            r.setPasswordHash(passwordEncoder.encode(passwordRevisor));
-            aprendizRepository.save(r);
-        });
-        aprendizRepository.findByCorreo("coordinador@ecoaula.local").ifPresent(c -> {
-            c.setPasswordHash(passwordEncoder.encode(passwordCoordinador));
-            aprendizRepository.save(c);
-        });
+    }
+
+    /**
+     * Contraseña con la que se puede crear una cuenta demo, o null si no se debe crear. Fuera de producción
+     * se usan las de desarrollo; en producción se exige una propia, distinta de las publicadas y de 12 o más caracteres.
+     */
+    private String contrasenaSembrable(String cuenta, String variable, String valor) {
+        if (!environment.acceptsProfiles(Profiles.of("prod"))) {
+            return valor;
+        }
+        if (valor == null || valor.isBlank()) {
+            log.warn("Producción: la cuenta demo '{}' no se crea porque no se definió {}.", cuenta, variable);
+            return null;
+        }
+        if (CONTRASENAS_DE_DESARROLLO.contains(valor) || valor.length() < LONGITUD_MINIMA_EN_PRODUCCION) {
+            log.warn("Producción: la cuenta demo '{}' no se crea: la contraseña de {} es una de las de desarrollo "
+                    + "o tiene menos de {} caracteres.", cuenta, variable, LONGITUD_MINIMA_EN_PRODUCCION);
+            return null;
+        }
+        return valor;
     }
 }

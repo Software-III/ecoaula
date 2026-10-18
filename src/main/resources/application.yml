@@ -45,7 +45,12 @@ ecoaula:
     ruta-local: ${STORAGE_PATH:./storage/contenidos}
   audio:
     max-size-bytes: ${ECOAULA_AUDIO_MAX_SIZE_BYTES:15728640}
+  # Cuentas y cursos de demostración. Las contraseñas por defecto son solo de desarrollo:
+  # en producción (application-prod.yml) no tienen valor por defecto y no se restablecen al arrancar.
   seed:
+    habilitado: ${ECOAULA_SEED_HABILITADO:true}
+    sincronizar-contrasenas: ${ECOAULA_SEED_SINCRONIZAR_CONTRASENAS:true}
     aprendiz-password: ${ECOAULA_SEED_APRENDIZ_PASSWORD:EcoAula2026!}
     gestor-password: ${ECOAULA_SEED_GESTOR_PASSWORD:GestorEcoAula2026!}
     revisor-password: ${ECOAULA_SEED_REVISOR_PASSWORD:RevisorEcoAula2026!}
+    coordinador-password: ${ECOAULA_SEED_COORDINADOR_PASSWORD:CoordinadorEcoAula2026!}

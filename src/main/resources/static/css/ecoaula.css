@@ -679,3 +679,19 @@ body.modo-alto-contraste .tarjeta-indicador .valor-indicador {
     border: 1px solid var(--color-borde);
     margin-bottom: 0.5rem;
 }
+
+/* --------------------------------------------------------------------------
+   Modo solo audio (perfil de accesibilidad): el reproductor ocupa todo el ancho
+   y sus controles son más grandes. Las imágenes ya llegan como texto desde el servidor.
+   -------------------------------------------------------------------------- */
+body.solo-audio audio {
+    display: block;
+    width: 100%;
+    min-height: 3.5rem;
+}
+
+body.solo-audio .seccion-audio {
+    padding: 1.25rem;
+    border: 2px solid var(--color-borde);
+    border-radius: 6px;
+}
