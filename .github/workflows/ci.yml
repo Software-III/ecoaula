@@ -10,10 +10,16 @@ jobs:
   build:
     name: Build & Verify (Autónomo sin Docker)
     runs-on: ubuntu-latest
-
+    env:
+      # Si el secreto no existe (por ejemplo, antes de configurar SonarCloud), el análisis se omite
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      SONAR_MAVEN_PLUGIN: org.sonarsource.scanner.maven:sonar-maven-plugin:4.0.0.4121
     steps:
       - name: Checkout del código
         uses: actions/checkout@v4
+        with:
+          # Historial completo: SonarCloud lo usa para distinguir el código nuevo
+          fetch-depth: 0
 
       - name: Configurar JDK 21
         uses: actions/setup-java@v4
@@ -25,8 +31,26 @@ jobs:
       - name: Dar permisos de ejecución al wrapper de Maven
         run: chmod +x mvnw
 
-      - name: Compilar y verificar con Maven (H2 / Unit tests)
+      # verify ejecuta las pruebas y jacoco:check: falla si la cobertura baja de los umbrales del pom.xml
+      - name: Compilar, probar y verificar cobertura (H2)
         run: ./mvnw -B verify
+
+      - name: Caché de SonarCloud
+        if: env.SONAR_TOKEN != ''
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
+      # Reutiliza las clases y el reporte de JaCoCo del paso anterior; falla si no se pasa el Quality Gate
+      - name: Análisis SonarCloud y Quality Gate
+        if: env.SONAR_TOKEN != ''
+        run: ./mvnw -B ${SONAR_MAVEN_PLUGIN}:sonar -Dsonar.qualitygate.wait=true
+
+      - name: Aviso de SonarCloud sin configurar
+        if: env.SONAR_TOKEN == ''
+        run: echo "::notice title=SonarCloud::Análisis omitido. Configure el secreto SONAR_TOKEN (ver docs/CALIDAD_CI.md)."
 
       - name: Publicar reporte de cobertura JaCoCo
         uses: actions/upload-artifact@v4

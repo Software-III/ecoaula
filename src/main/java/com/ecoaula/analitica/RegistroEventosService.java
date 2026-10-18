@@ -40,6 +40,8 @@ public class RegistroEventosService {
         }
     }
 
+    // La transacción se declara aquí también: la llamada interna a la otra sobrecarga no pasa por el proxy de Spring
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void registrar(TipoEvento tipo, HttpSession sesion, String correo) {
         registrar(tipo, sesion, correo, null, null);
     }
