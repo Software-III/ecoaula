@@ -26,6 +26,9 @@
 
         <p>Complete el siguiente formulario en una sola columna para crear su cuenta y configurar cómo desea interactuar con la plataforma.</p>
 
+        <!-- Alertas de estado y mensajes del sistema -->
+        <div th:if="${mensajeError != null}" class="alerta alerta-error" role="alert" th:text="${mensajeError}"></div>
+
         <!-- Resumen accesible de errores del formulario -->
         <div th:if="${#fields.hasErrors('${form.*}')}" class="resumen-errores" role="alert" tabindex="-1">
             <h2>Por favor corrija los siguientes errores:</h2>

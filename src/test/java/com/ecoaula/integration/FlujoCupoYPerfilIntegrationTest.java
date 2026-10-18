@@ -199,6 +199,45 @@ class FlujoCupoYPerfilIntegrationTest {
                 .andExpect(content().string(containsString("Versión del contenido consumida")));
     }
 
+    @Test
+    @DisplayName("CP-002: El registro con correo repetido debe ser rechazado y mostrar el aviso de error")
+    void debeRechazarRegistroConCorreoDuplicadoYMostrarError() throws Exception {
+        String correoExistente = "aprendiz@ecoaula.local";
+
+        mockMvc.perform(post("/registro").with(csrf())
+                        .param("nombreCompleto", "Usuario Duplicado")
+                        .param("correo", correoExistente)
+                        .param("telefono", "3100000000")
+                        .param("password", "ClaveSegura2026!")
+                        .param("consentimientoDatos", "true")
+                        .param("velocidadAudio", "1.0")
+                        .param("modoVisual", "ESTANDAR")
+                        .param("tamanoTexto", "NORMAL"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("registro"))
+                .andExpect(model().attributeHasFieldErrors("form", "correo"))
+                .andExpect(model().attributeExists("mensajeError"))
+                .andExpect(content().string(containsString("class=\"alerta alerta-error\"")))
+                .andExpect(content().string(containsString("Ya existe una cuenta registrada con el correo")))
+                .andExpect(content().string(containsString("class=\"resumen-errores\"")))
+                .andExpect(content().string(containsString("id=\"err-correo\"")));
+    }
+
+    @Test
+    @DisplayName("CP-002: El registro con datos inválidos o sin consentimiento debe mostrar los errores del formulario")
+    void debeRechazarRegistroConDatosInvalidos() throws Exception {
+        mockMvc.perform(post("/registro").with(csrf())
+                        .param("nombreCompleto", "")
+                        .param("correo", "correo-invalido")
+                        .param("telefono", "")
+                        .param("password", "123")
+                        .param("consentimientoDatos", "false"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("registro"))
+                .andExpect(model().attributeHasFieldErrors("form", "nombreCompleto", "correo", "telefono", "password", "consentimientoDatos"))
+                .andExpect(content().string(containsString("class=\"resumen-errores\"")));
+    }
+
     private MockHttpServletRequestBuilder editarCurso(Curso curso, String cupo) {
         return post("/gestor/cursos/{id}/editar", curso.getId()).with(GESTOR).with(csrf())
                 .param("titulo", curso.getTitulo()).param("descripcion", curso.getDescripcion())
