@@ -199,6 +199,31 @@ class FlujoCupoYPerfilIntegrationTest {
                 .andExpect(content().string(containsString("Versión del contenido consumida")));
     }
 
+    @Test
+    @DisplayName("Mi Perfil muestra el menú y el regreso del rol de quien lo abre, no el del aprendiz")
+    void perfilConMenuDelRol() throws Exception {
+        mockMvc.perform(get("/perfil").with(GESTOR))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("href=\"/gestor/cursos\">Mis Cursos y Contenidos")))
+                .andExpect(content().string(containsString("Volver a Mis Cursos y Contenidos")))
+                .andExpect(content().string(not(containsString("href=\"/cursos\""))))
+                .andExpect(content().string(not(containsString("Mis reportes"))));
+
+        mockMvc.perform(get("/perfil").with(user("revisor@ecoaula.local").roles("REVISOR_ACCESIBILIDAD")))
+                .andExpect(content().string(containsString("href=\"/revisor/cola\">Cola de Revisión")))
+                .andExpect(content().string(not(containsString("href=\"/cursos\""))));
+
+        mockMvc.perform(get("/perfil").with(user("coordinador@ecoaula.local").roles("COORDINADOR")))
+                .andExpect(content().string(containsString("Volver a Reportes de barreras")))
+                .andExpect(content().string(not(containsString("href=\"/cursos\""))))
+                .andExpect(content().string(not(containsString("Informes de revisión"))));
+
+        mockMvc.perform(get("/perfil").with(aprendizNuevo()))
+                .andExpect(content().string(containsString("href=\"/cursos\">Catálogo de Cursos")))
+                .andExpect(content().string(containsString("Mis reportes")))
+                .andExpect(content().string(not(containsString("/gestor/cursos"))));
+    }
+
     private MockHttpServletRequestBuilder editarCurso(Curso curso, String cupo) {
         return post("/gestor/cursos/{id}/editar", curso.getId()).with(GESTOR).with(csrf())
                 .param("titulo", curso.getTitulo()).param("descripcion", curso.getDescripcion())
