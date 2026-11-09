@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${titulo != null ? titulo : 'Evaluación final — EcoAula'}">Evaluación final — EcoAula</title>
+    <link rel="stylesheet" th:href="@{/css/ecoaula.css}">
+</head>
+<body th:class="${(perfilAccesibilidad != null and perfilAccesibilidad.modoVisual != null and perfilAccesibilidad.modoVisual.name() == 'ALTO_CONTRASTE' ? 'modo-alto-contraste ' : '') + (perfilAccesibilidad != null and perfilAccesibilidad.tamanoTexto != null and perfilAccesibilidad.tamanoTexto.name() == 'GRANDE' ? 'texto-grande ' : '') + (perfilAccesibilidad != null and perfilAccesibilidad.soloAudio ? 'solo-audio ' : '')}">
+
+    <a href="#contenido-principal" class="skip-link">Saltar al contenido principal</a>
+
+    <header class="encabezado-sitio" role="banner">
+        <div class="contenedor-principal">
+            <div style="font-size: 1.5rem; font-weight: bold;">
+                <a th:href="@{/gestor/cursos}" style="text-decoration: none; color: inherit;">EcoAula — Portal del Gestor</a>
+            </div>
+            <nav class="navegacion-principal" role="navigation" aria-label="Navegación principal">
+                <ul>
+                    <li><a th:href="@{/gestor/cursos}">Mis Cursos y Contenidos</a></li>
+                    <li><a th:href="@{/informes-revision}">Informes de revisión</a></li>
+                    <li><a th:href="@{/reportes-barrera}">Reportes de barreras</a></li>
+                    <li><a th:href="@{/indicadores}">Indicadores</a></li>
+                    <li><a th:href="@{/perfil}">Mi Perfil</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main id="contenido-principal" class="contenedor-principal" role="main" tabindex="-1">
+        <nav aria-label="Miga de pan" style="margin-bottom: 1rem;">
+            <a th:href="@{/gestor/cursos}">← Volver al listado de cursos</a>
+        </nav>
+
+        <h1 th:text="'Evaluación final de: ' + ${curso.titulo}">Evaluación final del curso</h1>
+
+        <p>La evaluación final es lo último que presenta el aprendiz para obtener su certificado: se aprueba con el 70 % de respuestas correctas.
+            Para poder publicar el curso en el catálogo necesita al menos <strong th:text="${minPreguntas}">3</strong> preguntas.</p>
+
+        <div th:if="${mensajeExito != null}" class="alerta alerta-exito" role="status" aria-live="polite" th:text="${mensajeExito}"></div>
+        <div th:if="${mensajeError != null}" class="alerta alerta-error" role="alert" th:text="${mensajeError}"></div>
+
+        <p th:if="${bloqueo != null}" class="alerta alerta-error" role="status" th:text="${bloqueo}">Motivo del bloqueo</p>
+
+        <section aria-labelledby="seccion-preguntas">
+            <h2 id="seccion-preguntas">
+                Preguntas de la evaluación (<span th:text="${preguntas.size()}">0</span>)
+            </h2>
+
+            <div th:if="${preguntas.empty}" class="alerta alerta-error" role="status">
+                Este curso todavía no tiene preguntas. Use el formulario inferior para agregar la primera.
+            </div>
+
+            <p th:if="${!preguntas.empty and preguntas.size() < minPreguntas}" class="ayuda-campo">
+                Faltan <span th:text="${minPreguntas - preguntas.size()}">1</span> pregunta(s) para poder publicar el curso.
+            </p>
+
+            <ol th:unless="${preguntas.empty}" style="padding-left: 1.25rem;">
+                <li th:each="pregunta : ${preguntas}" style="margin-bottom: 1.5rem;">
+                    <p style="margin-bottom: 0.25rem;"><strong th:text="${pregunta.enunciado}">Enunciado de la pregunta</strong></p>
+                    <ul style="margin-top: 0;">
+                        <li th:each="opcion : ${pregunta.opciones}">
+                            <span th:text="${opcion.texto}">Texto de la opción</span>
+                            <strong th:if="${opcion.correcta}"> (respuesta correcta)</strong>
+                        </li>
+                    </ul>
+
+                    <details th:if="${bloqueo == null}">
+                        <summary th:text="'Eliminar la pregunta ' + ${pregunta.orden}">Eliminar la pregunta</summary>
+                        <form th:action="@{/gestor/cursos/{cid}/evaluacion/preguntas/{pid}/eliminar(cid=${curso.id}, pid=${pregunta.id})}"
+                              method="post" style="margin-top: 0.5rem;">
+                            <div class="opcion-seleccion">
+                                <input type="checkbox" th:id="'confirmar-' + ${pregunta.id}" name="confirmar" value="true" required>
+                                <label th:for="'confirmar-' + ${pregunta.id}"
+                                       th:text="'Confirmo que deseo eliminar la pregunta ' + ${pregunta.orden}">Confirmo</label>
+                            </div>
+                            <button type="submit" class="boton-secundario">Eliminar pregunta</button>
+                        </form>
+                    </details>
+                </li>
+            </ol>
+        </section>
+
+        <section th:if="${bloqueo == null}" aria-labelledby="seccion-nueva-pregunta-titulo" id="seccion-nueva-pregunta"
+                 style="margin-top: 2.5rem; border-top: 2px solid var(--color-borde); padding-top: 1.5rem;">
+            <h2 id="seccion-nueva-pregunta-titulo">Agregar una pregunta</h2>
+            <p>Cada pregunta tiene una sola respuesta correcta. Escriba de 2 a 4 opciones, deje en blanco las que no use
+                y marque cuál es la correcta.</p>
+
+            <form th:action="@{/gestor/cursos/{id}/evaluacion/preguntas(id=${curso.id})}" method="post" novalidate>
+                <div class="grupo-campo">
+                    <label for="enunciado">Enunciado de la pregunta *</label>
+                    <span id="ayuda-enunciado" class="ayuda-campo" th:text="'Máximo ' + ${maxEnunciado} + ' caracteres.'">Máximo 500 caracteres.</span>
+                    <textarea id="enunciado" name="enunciado" rows="3" required aria-describedby="ayuda-enunciado"
+                              th:maxlength="${maxEnunciado}" th:text="${enunciadoPrevio}"></textarea>
+                </div>
+
+                <fieldset>
+                    <legend>Opciones de respuesta y cuál es la correcta *</legend>
+                    <p id="ayuda-opciones" class="ayuda-campo">Escriba el texto de cada opción y marque con el botón de opción la respuesta correcta.</p>
+
+                    <div class="grupo-campo" th:each="n : ${#numbers.sequence(1, 4)}">
+                        <label th:for="'opcion' + ${n}" th:text="'Texto de la opción ' + ${n} + (${n le 2 ? ' *' : ' (opcional)'})">Texto de la opción</label>
+                        <input type="text" th:id="'opcion' + ${n}" th:name="'opcion' + ${n}" th:maxlength="${maxOpcion}"
+                               th:value="${n == 1 ? opcion1Previa : (n == 2 ? opcion2Previa : (n == 3 ? opcion3Previa : opcion4Previa))}"
+                               aria-describedby="ayuda-opciones">
+                        <div class="opcion-seleccion">
+                            <input type="radio" th:id="'correcta' + ${n}" name="correcta" th:value="${n}"
+                                   th:checked="${correctaPrevia != null and correctaPrevia == n}">
+                            <label th:for="'correcta' + ${n}" th:text="'La opción ' + ${n} + ' es la respuesta correcta'">Es la correcta</label>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <div style="margin-top: 1.5rem;">
+                    <button type="submit" class="boton-principal">+ Agregar pregunta</button>
+                </div>
+            </form>
+        </section>
+    </main>
+
+</body>
+</html>

@@ -99,6 +99,11 @@
                         <a th:href="@{/gestor/cursos/{id}/lecciones(id=${curso.id})}" class="boton-principal">
                             Gestionar Lecciones
                         </a>
+                        <a th:href="@{/gestor/cursos/{id}/evaluacion(id=${curso.id})}" class="boton-secundario"
+                           th:attr="aria-label=(${curso.activo} ? 'Ver la evaluación final del curso ' : 'Crear o editar la evaluación final del curso ') + ${curso.titulo}"
+                           th:text="${curso.activo} ? 'Ver evaluación final' : 'Evaluación final'">
+                            Evaluación final
+                        </a>
                         <a th:unless="${curso.activo}" th:href="@{/gestor/cursos/{id}/editar(id=${curso.id})}" class="boton-secundario"
                            th:attr="aria-label='Editar o eliminar el curso ' + ${curso.titulo}">
                             Editar o eliminar curso
@@ -115,7 +120,7 @@
                         </form>
                     </div>
                     <p th:unless="${curso.activo}" class="ayuda-campo">
-                        Para publicarlo, todas sus lecciones deben tener una versión aprobada por el revisor y el curso debe tener evaluación final.
+                        Para publicarlo, todas sus lecciones deben tener una versión aprobada por el revisor y el curso debe tener evaluación final con al menos 3 preguntas (créela en el botón «Evaluación final»).
                     </p>
                     <p th:if="${curso.activo}" class="ayuda-campo">
                         Para modificar sus datos o sus lecciones, retírelo del catálogo. Las correcciones de contenido se hacen con versiones nuevas.

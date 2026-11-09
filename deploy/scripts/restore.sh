@@ -13,7 +13,7 @@ AUDIO_BACKUP_FILE="${2:-}"
 DB_NAME="${3:-ecoaula_db}"
 DB_CONTAINER="ecoaula-mysql"
 DB_USER="ecoaula_user"
-DB_PASS="${DB_PASSWORD:-ecoaula_secret}"
+DB_PASS="${DB_PASSWORD:?Defina DB_PASSWORD (ver /etc/ecoaula/ecoaula.env)}"
 AUDIO_DIR="/home/ubuntu/ecoaula/storage/contenidos"
 
 echo "[$(date)] Iniciando restauración en ${DB_NAME}..."
@@ -25,7 +25,7 @@ fi
 
 # 1. Restaurar base de datos
 echo "  -> Descomprimiendo y restaurando volcado en contenedor ${DB_CONTAINER}..."
-gunzip -c "${DB_BACKUP_FILE}" | docker exec -i "${DB_CONTAINER}" mysql -u "${DB_USER}" -p"${DB_PASS}" "${DB_NAME}"
+gunzip -c "${DB_BACKUP_FILE}" | docker exec -i -e MYSQL_PWD="${DB_PASS}" "${DB_CONTAINER}" mysql -u "${DB_USER}" "${DB_NAME}"
 echo "     Base de datos restaurada exitosamente."
 
 # 2. Restaurar audios si se proporcionó archivo

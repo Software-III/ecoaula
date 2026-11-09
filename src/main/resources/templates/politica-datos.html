@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Política de Tratamiento de Datos Personales — EcoAula</title>
+    <link rel="stylesheet" th:href="@{/css/ecoaula.css}">
+</head>
+<body th:class="${(perfilAccesibilidad != null and perfilAccesibilidad.modoVisual != null and perfilAccesibilidad.modoVisual.name() == 'ALTO_CONTRASTE' ? 'modo-alto-contraste ' : '') + (perfilAccesibilidad != null and perfilAccesibilidad.tamanoTexto != null and perfilAccesibilidad.tamanoTexto.name() == 'GRANDE' ? 'texto-grande ' : '')}">
+
+    <a href="#contenido-principal" class="skip-link">Saltar al contenido principal</a>
+
+    <header class="encabezado-sitio" role="banner">
+        <div class="contenedor-principal">
+            <div style="font-size: 1.5rem; font-weight: bold;">
+                <a th:href="@{/cursos}" style="text-decoration: none; color: inherit;">EcoAula</a>
+            </div>
+        </div>
+    </header>
+
+    <main id="contenido-principal" class="contenedor-principal" role="main" tabindex="-1">
+        <h1>Política de Tratamiento de Datos Personales</h1>
+        <p>Versión 1.0 · Vigente desde noviembre de 2026 · Ley 1581 de 2012, Decreto 1377 de 2013 (compilado en el Decreto 1074 de 2015).</p>
+
+        <nav aria-label="Contenido de esta política">
+            <ul>
+                <li><a href="#responsable">1. Responsable del tratamiento</a></li>
+                <li><a href="#datos">2. Qué datos recogemos</a></li>
+                <li><a href="#finalidad">3. Para qué los usamos</a></li>
+                <li><a href="#sensible">4. Dato sensible: condición visual</a></li>
+                <li><a href="#conservacion">5. Cuánto tiempo los conservamos</a></li>
+                <li><a href="#derechos">6. Sus derechos</a></li>
+                <li><a href="#consultas">7. Cómo ejercer sus derechos</a></li>
+                <li><a href="#seguridad">8. Cómo protegemos sus datos</a></li>
+                <li><a href="#terceros">9. Terceros y ubicación de los datos</a></li>
+                <li><a href="#cambios">10. Cambios a esta política</a></li>
+            </ul>
+        </nav>
+
+        <section aria-labelledby="responsable">
+            <h2 id="responsable">1. Responsable del tratamiento</h2>
+            <p>EcoAula es una plataforma educativa accesible para personas ciegas o con baja visión, desarrollada por un equipo de estudiantes
+                de Ingeniería de Software III de la Universidad del Quindío con fines estrictamente académicos. El equipo del proyecto es el responsable del tratamiento
+                de los datos que usted entrega en esta plataforma.</p>
+            <p>Canal de contacto para esta política:
+                <strong th:if="${!correoContacto.isEmpty()}" th:text="${correoContacto}">correo@ejemplo.org</strong>
+                <span th:if="${correoContacto.isEmpty()}">el correo del equipo del proyecto indicado por su docente o coordinador académico.</span>
+            </p>
+        </section>
+
+        <section aria-labelledby="datos">
+            <h2 id="datos">2. Qué datos recogemos</h2>
+            <ul>
+                <li><strong>Datos de la cuenta:</strong> nombre, correo electrónico y contraseña. La contraseña se guarda únicamente cifrada con BCrypt, nunca en texto legible.</li>
+                <li><strong>Preferencias de accesibilidad:</strong> velocidad de audio, voz de lectura, modo de contraste, tamaño de texto y modo solo audio.</li>
+                <li><strong>Dato sensible, opcional:</strong> su condición visual (ver sección 4).</li>
+                <li><strong>Datos de su recorrido de aprendizaje:</strong> matrículas, lecciones completadas, intentos y resultados de evaluaciones, y certificados emitidos.</li>
+                <li><strong>Eventos de uso:</strong> hitos del proceso (inicio de registro, matrícula, acceso a lecciones) para medir la calidad de la plataforma.</li>
+                <li><strong>Reportes de barreras de accesibilidad,</strong> si usted decide enviarlos.</li>
+            </ul>
+        </section>
+
+        <section aria-labelledby="finalidad">
+            <h2 id="finalidad">3. Para qué los usamos</h2>
+            <ul>
+                <li>Crear y mantener su cuenta y adaptar la plataforma a sus preferencias de accesibilidad.</li>
+                <li>Gestionar su matrícula, su avance, sus evaluaciones y la emisión y verificación de su certificado.</li>
+                <li>Medir la calidad y la accesibilidad del servicio con indicadores agregados.</li>
+                <li>Atender los reportes de barreras que usted envíe.</li>
+            </ul>
+            <p>No vendemos sus datos, no los usamos para publicidad y no los compartimos con terceros para fines distintos de los anteriores.</p>
+        </section>
+
+        <section aria-labelledby="sensible">
+            <h2 id="sensible">4. Dato sensible: condición visual</h2>
+            <p>La condición visual es un dato sensible según el artículo 5 de la Ley 1581, porque se relaciona con su salud.
+                <strong>Usted no está obligado a entregarlo:</strong> el campo es opcional y puede usar toda la plataforma sin llenarlo.
+                Si lo entrega, solo se usa para adaptar los contenidos a sus necesidades, se guarda cifrado con AES-256-GCM y no se muestra en
+                listados, certificados, ni en la verificación pública de certificados.</p>
+        </section>
+
+        <section aria-labelledby="conservacion">
+            <h2 id="conservacion">5. Cuánto tiempo los conservamos</h2>
+            <p>Conservamos sus datos mientras su cuenta esté activa y durante el periodo académico del proyecto. Cuando usted solicite
+                eliminarlos, o cuando el proyecto termine, se suprimen, salvo lo que una norma nos obligue a conservar.</p>
+        </section>
+
+        <section aria-labelledby="derechos">
+            <h2 id="derechos">6. Sus derechos como titular</h2>
+            <p>Según el artículo 8 de la Ley 1581, usted tiene derecho a:</p>
+            <ul>
+                <li>Conocer, actualizar y rectificar sus datos personales.</li>
+                <li>Solicitar prueba de la autorización que nos dio.</li>
+                <li>Ser informado, si lo pide, del uso que se ha dado a sus datos.</li>
+                <li>Presentar quejas ante la Superintendencia de Industria y Comercio (SIC) por infracciones a la ley.</li>
+                <li>Revocar la autorización y solicitar la supresión de sus datos.</li>
+                <li>Acceder de forma gratuita a sus datos personales.</li>
+            </ul>
+        </section>
+
+        <section aria-labelledby="consultas">
+            <h2 id="consultas">7. Cómo ejercer sus derechos</h2>
+            <p>Escriba al canal de contacto de la sección 1 indicando su nombre, el correo con el que se registró y lo que solicita
+                (consultar, corregir, suprimir o revocar). Respondemos las consultas en un máximo de 10 días hábiles y los reclamos en un máximo de
+                15 días hábiles, como establece el artículo 14 y el artículo 15 de la Ley 1581.</p>
+        </section>
+
+        <section aria-labelledby="seguridad">
+            <h2 id="seguridad">8. Cómo protegemos sus datos</h2>
+            <ul>
+                <li>Conexión cifrada (HTTPS) en toda la plataforma.</li>
+                <li>Contraseñas cifradas con BCrypt; condición visual cifrada con AES-256-GCM.</li>
+                <li>Acceso por roles: cada persona solo ve lo que su rol necesita.</li>
+                <li>Base de datos sin acceso desde internet y respaldos con retención limitada.</li>
+                <li>Los registros técnicos (logs) no guardan nombres, correos ni códigos de certificado.</li>
+            </ul>
+        </section>
+
+        <section aria-labelledby="terceros">
+            <h2 id="terceros">9. Terceros y ubicación de los datos</h2>
+            <p>La plataforma se aloja en servidores de Amazon Web Services (AWS Lightsail), ubicados en Estados Unidos. AWS actúa como encargado del
+                tratamiento de la infraestructura: almacena los datos por cuenta del equipo, sin usarlos para fines propios. La verificación pública de un
+                certificado solo informa si el código es válido y no revela datos personales.</p>
+        </section>
+
+        <section aria-labelledby="cambios">
+            <h2 id="cambios">10. Cambios a esta política</h2>
+            <p>Si esta política cambia de forma sustancial, lo informaremos en esta misma página y, cuando corresponda, le pediremos de nuevo su autorización.</p>
+        </section>
+
+        <p style="margin-top: 2rem;"><a th:href="@{/registro}">← Volver al registro</a></p>
+    </main>
+
+</body>
+</html>

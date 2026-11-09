@@ -16,6 +16,7 @@ import com.ecoaula.controller.dto.LeccionForm;
 import com.ecoaula.model.Contenido;
 import com.ecoaula.model.ContenidoVersion;
 import com.ecoaula.model.Curso;
+import com.ecoaula.model.enums.EstadoContenido;
 import com.ecoaula.service.GestionContenidoService;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
@@ -301,8 +302,15 @@ public class GestorContenidoController {
      * Pantalla 3: Crear/editar una versión en borrador (transcripción, subida de audio, vista previa nativa).
      */
     @GetMapping("/versiones/{versionId}/editar")
-    public String editarBorradorForm(@PathVariable("versionId") Long versionId, Model model) {
+    public String editarBorradorForm(@PathVariable("versionId") Long versionId, Model model,
+                                     RedirectAttributes redirectAttributes) {
         ContenidoVersion version = gestionContenidoService.obtenerVersionDetalle(versionId);
+        // Una versión retirada ya no se corrige: el servidor bloquea el guardado y el editor tampoco debe ofrecerse
+        if (version.getEstado() == EstadoContenido.RETIRADA) {
+            redirectAttributes.addFlashAttribute("mensajeError", "La versión " + version.getNumeroVersion()
+                    + " está retirada y es de solo lectura. Para corregir la lección cree una versión nueva.");
+            return "redirect:/gestor/lecciones/" + version.getContenido().getId() + "/versiones";
+        }
         BorradorVersionForm form = new BorradorVersionForm(version.getTranscripcion());
         form.setFuenteMaterial(version.getFuenteMaterial());
         form.setLicenciaDeclarada(version.getLicenciaDeclaradaEn() != null);

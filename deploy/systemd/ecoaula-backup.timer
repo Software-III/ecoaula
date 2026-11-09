@@ -1,0 +1,10 @@
+[Unit]
+Description=Respaldo diario de EcoAula (RPO objetivo: 24 horas)
+
+[Timer]
+# Todos los días a las 02:00 (hora del servidor); si el servidor estaba apagado, se ejecuta al encender
+OnCalendar=*-*-* 02:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
