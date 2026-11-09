@@ -1,0 +1,15 @@
+{
+  "name": "ecoaula-pruebas-no-funcionales",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Pruebas automatizadas no funcionales de EcoAula: accesibilidad (RNF-12/RNF-06) y entrega de contenido publicado (RNF-16)",
+  "type": "module",
+  "scripts": {
+    "accesibilidad": "node accesibilidad.mjs",
+    "contenido-publicado": "node contenido-publicado.mjs"
+  },
+  "dependencies": {
+    "@axe-core/playwright": "4.10.2",
+    "playwright": "1.56.0"
+  }
+}

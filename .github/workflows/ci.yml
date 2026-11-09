@@ -69,13 +69,14 @@ jobs:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_ROOT_PASSWORD: root_secret
+          # Valores efímeros del contenedor de CI; no son los de producción
+          MYSQL_ROOT_PASSWORD: ci-root-efimero
           MYSQL_DATABASE: ecoaula_db
           MYSQL_USER: ecoaula_user
-          MYSQL_PASSWORD: ecoaula_secret
+          MYSQL_PASSWORD: ci-app-efimero
         ports:
           - 3307:3306
-        options: --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot_secret" --health-interval=10s --health-timeout=5s --health-retries=10
+        options: --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pci-root-efimero" --health-interval=10s --health-timeout=5s --health-retries=10
 
     steps:
       - name: Checkout del código
@@ -97,5 +98,5 @@ jobs:
           DB_PORT: 3307
           DB_NAME: ecoaula_db
           DB_USER: ecoaula_user
-          DB_PASSWORD: ecoaula_secret
+          DB_PASSWORD: ci-app-efimero
         run: ./mvnw -B verify -Pintegracion-mysql
