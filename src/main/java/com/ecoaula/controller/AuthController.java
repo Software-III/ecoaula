@@ -8,7 +8,6 @@ import com.ecoaula.model.PerfilAccesibilidad;
 import com.ecoaula.model.enums.TipoEvento;
 import com.ecoaula.service.AccesibilidadService;
 import com.ecoaula.service.AprendizService;
-import com.ecoaula.exception.EcoAulaException;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
@@ -87,13 +86,9 @@ public class AuthController {
             aprendizService.registrar(form);
             registroEventos.registrar(TipoEvento.REGISTRO_COMPLETADO, session, form.getCorreo());
             return "redirect:/login?registrado=true";
-        } catch (EcoAulaException ex) {
+        } catch (Exception ex) {
             bindingResult.rejectValue("correo", "error.correo.duplicado", ex.getMessage());
             model.addAttribute("mensajeError", ex.getMessage());
-            return "registro";
-        } catch (Exception ex) {
-            bindingResult.rejectValue("correo", "error.correo.duplicado", ex.getMessage() != null ? ex.getMessage() : "Error al procesar el registro.");
-            model.addAttribute("mensajeError", ex.getMessage() != null ? ex.getMessage() : "Error al procesar el registro.");
             return "registro";
         }
     }
