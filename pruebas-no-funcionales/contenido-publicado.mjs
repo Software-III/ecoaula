@@ -17,7 +17,7 @@ async function hrefs(patron) {
 }
 
 await pagina.goto(`${BASE_URL}/cursos`);
-const cursos = await hrefs(/^\/cursos\/\d+$|\/cursos\/\d+$/);
+const cursos = await hrefs(/^\/(cursos|matriculas)\/\d+$/);
 const lecciones = [];
 for (const curso of cursos) {
   await pagina.goto(`${BASE_URL}${curso}`);
