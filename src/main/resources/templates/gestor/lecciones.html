@@ -34,6 +34,10 @@
 
         <h1 th:text="'Lecciones de: ' + ${curso.titulo}">Lecciones del Curso</h1>
 
+        <p>Cuando las lecciones estén aprobadas, cree la
+            <a th:href="@{/gestor/cursos/{id}/evaluacion(id=${curso.id})}">evaluación final del curso</a>:
+            sin ella el curso no se puede publicar en el catálogo.</p>
+
         <!-- Mensajes de estado -->
         <div th:if="${mensajeExito != null}" class="alerta alerta-exito" role="status" aria-live="polite" th:text="${mensajeExito}"></div>
         <div th:if="${mensajeError != null}" class="alerta alerta-error" role="alert" th:text="${mensajeError}"></div>

@@ -7,6 +7,7 @@ import com.ecoaula.model.Aprendiz;
 import com.ecoaula.model.Contenido;
 import com.ecoaula.model.ContenidoVersion;
 import com.ecoaula.model.Curso;
+import com.ecoaula.model.Evaluacion;
 import com.ecoaula.model.enums.EstadoContenido;
 import com.ecoaula.model.enums.Rol;
 import com.ecoaula.repository.AprendizRepository;
@@ -138,8 +139,13 @@ public class GestionContenidoService {
                 .filter(l -> versionRepository.findByContenidoIdAndEstado(l.getId(), EstadoContenido.PUBLICADA).isEmpty())
                 .forEach(l -> pendientes.add("la lección " + l.getOrden() + " (" + l.getTitulo()
                         + ") no tiene una versión aprobada por el revisor de accesibilidad"));
-        if (evaluacionRepository.findByCursoId(cursoId).isEmpty()) {
-            pendientes.add("el curso no tiene evaluación final configurada");
+        Optional<Evaluacion> evaluacion = evaluacionRepository.findByCursoId(cursoId);
+        if (evaluacion.isEmpty()) {
+            pendientes.add("el curso no tiene evaluación final (créela en \"Evaluación final\" con al menos "
+                    + GestionEvaluacionService.MIN_PREGUNTAS_PARA_PUBLICAR + " preguntas)");
+        } else if (evaluacion.get().getPreguntas().size() < GestionEvaluacionService.MIN_PREGUNTAS_PARA_PUBLICAR) {
+            pendientes.add("la evaluación final tiene " + evaluacion.get().getPreguntas().size()
+                    + " pregunta(s) y necesita al menos " + GestionEvaluacionService.MIN_PREGUNTAS_PARA_PUBLICAR);
         }
         if (!pendientes.isEmpty()) {
             throw new ReglaNegocioException("No se puede publicar el curso en el catálogo: " + String.join("; ", pendientes) + ".");

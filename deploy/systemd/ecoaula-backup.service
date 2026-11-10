@@ -1,0 +1,9 @@
+[Unit]
+Description=Respaldo de EcoAula (MySQL + audios)
+After=docker.service
+
+[Service]
+Type=oneshot
+# Lee DB_PASSWORD y, si se configura, BACKUP_S3_BUCKET (mismo archivo protegido de la aplicación)
+EnvironmentFile=/etc/ecoaula/ecoaula.env
+ExecStart=/home/ubuntu/ecoaula/deploy/scripts/backup.sh

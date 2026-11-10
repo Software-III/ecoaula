@@ -26,6 +26,9 @@
 
         <p>Complete el siguiente formulario en una sola columna para crear su cuenta y configurar cómo desea interactuar con la plataforma.</p>
 
+        <!-- Alertas de estado y mensajes del sistema -->
+        <div th:if="${mensajeError != null}" class="alerta alerta-error" role="alert" th:text="${mensajeError}"></div>
+
         <!-- Resumen accesible de errores del formulario -->
         <div th:if="${#fields.hasErrors('${form.*}')}" class="resumen-errores" role="alert" tabindex="-1">
             <h2>Por favor corrija los siguientes errores:</h2>
@@ -81,7 +84,8 @@
                     <input type="checkbox" id="consentimientoDatos" th:field="*{consentimientoDatos}" required
                            th:attr="aria-invalid=${#fields.hasErrors('consentimientoDatos')}, aria-describedby=${#fields.hasErrors('consentimientoDatos')} ? 'err-consent' : null">
                     <label for="consentimientoDatos">
-                        <strong>Autorización de tratamiento de datos personales:</strong> Autorizo de manera previa, expresa e informada el tratamiento de mis datos personales y sensibles con fines estrictamente académicos (Ley 1581 de 2012 y Decreto 1377 de 2013).
+                        <strong>Autorización de tratamiento de datos personales:</strong> Autorizo de manera previa, expresa e informada el tratamiento de mis datos personales y sensibles con fines estrictamente académicos (Ley 1581 de 2012 y Decreto 1377 de 2013), conforme a la
+                        <a th:href="@{/politica-datos}" target="_blank" rel="noopener">Política de Tratamiento de Datos Personales (se abre en una pestaña nueva)</a>.
                     </label>
                 </div>
                 <span id="err-consent" class="error-campo" th:if="${#fields.hasErrors('consentimientoDatos')}" th:errors="*{consentimientoDatos}"></span>
