@@ -1,20 +1,23 @@
+# MySQL de EcoAula. Las contraseñas NO viven en este archivo: se leen de un archivo .env junto a este
+# (fuera de Git, ver .env.example) o de variables de entorno. Si faltan, docker compose se detiene.
 services:
   mysql:
     image: mysql:8.0
     container_name: ecoaula-mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: root_password_dev
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?Defina DB_ROOT_PASSWORD en el archivo .env}
       MYSQL_DATABASE: ${DB_NAME:-ecoaula_db}
       MYSQL_USER: ${DB_USER:-ecoaula_user}
-      MYSQL_PASSWORD: ${DB_PASSWORD:-ecoaula_secret}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?Defina DB_PASSWORD en el archivo .env}
     ports:
       - "127.0.0.1:${DB_PORT:-3307}:3306"
     volumes:
       - ecoaula_mysql_data:/var/lib/mysql
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot_password_dev"]
+      # La contraseña llega por variable de entorno del contenedor, no escrita en el comando
+      test: ["CMD-SHELL", "MYSQL_PWD=\"$$MYSQL_ROOT_PASSWORD\" mysqladmin ping -h localhost -u root"]
       interval: 10s
       timeout: 5s
       retries: 5

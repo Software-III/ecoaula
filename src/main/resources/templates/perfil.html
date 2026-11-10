@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,15 +12,25 @@
 
     <header class="encabezado-sitio" role="banner">
         <div class="contenedor-principal">
+            <!-- El perfil lo usan todos los roles: el menú y el inicio corresponden al rol de quien lo abre -->
             <div style="font-size: 1.5rem; font-weight: bold;">
-                <a th:href="@{/cursos}" style="text-decoration: none; color: inherit;">EcoAula</a>
+                <a sec:authorize="hasRole('APRENDIZ')" th:href="@{/cursos}" style="text-decoration: none; color: inherit;">EcoAula</a>
+                <a sec:authorize="hasRole('GESTOR_CONTENIDO')" th:href="@{/gestor/cursos}" style="text-decoration: none; color: inherit;">EcoAula</a>
+                <a sec:authorize="hasRole('REVISOR_ACCESIBILIDAD')" th:href="@{/revisor/cola}" style="text-decoration: none; color: inherit;">EcoAula</a>
+                <a sec:authorize="hasRole('COORDINADOR')" th:href="@{/reportes-barrera}" style="text-decoration: none; color: inherit;">EcoAula</a>
             </div>
             <nav class="navegacion-principal" role="navigation" aria-label="Navegación principal">
                 <ul>
-                    <li><a th:href="@{/cursos}">Catálogo de Cursos</a></li>
+                    <li sec:authorize="hasRole('APRENDIZ')"><a th:href="@{/cursos}">Catálogo de Cursos</a></li>
+                    <li sec:authorize="hasRole('GESTOR_CONTENIDO')"><a th:href="@{/gestor/cursos}">Mis Cursos y Contenidos</a></li>
+                    <li sec:authorize="hasRole('GESTOR_CONTENIDO')"><a th:href="@{/gestor/cursos/nuevo}">Crear Nuevo Curso</a></li>
+                    <li sec:authorize="hasRole('REVISOR_ACCESIBILIDAD')"><a th:href="@{/revisor/cola}">Cola de Revisión</a></li>
+                    <li sec:authorize="hasAnyRole('GESTOR_CONTENIDO','REVISOR_ACCESIBILIDAD')"><a th:href="@{/informes-revision}">Informes de revisión</a></li>
+                    <li sec:authorize="hasAnyRole('GESTOR_CONTENIDO','REVISOR_ACCESIBILIDAD','COORDINADOR')"><a th:href="@{/reportes-barrera}">Reportes de barreras</a></li>
+                    <li sec:authorize="hasAnyRole('GESTOR_CONTENIDO','REVISOR_ACCESIBILIDAD','COORDINADOR')"><a th:href="@{/indicadores}">Indicadores</a></li>
                     <li><a th:href="@{/perfil}" aria-current="page">Mi Perfil</a></li>
-                    <li><a th:href="@{/mis-reportes}">Mis reportes</a></li>
-                    <li><a th:href="@{/reportar-barrera(etapa='REGISTRO_MATRICULA')}">Reportar una barrera</a></li>
+                    <li sec:authorize="hasRole('APRENDIZ')"><a th:href="@{/mis-reportes}">Mis reportes</a></li>
+                    <li sec:authorize="hasRole('APRENDIZ')"><a th:href="@{/reportar-barrera(etapa='REGISTRO_MATRICULA')}">Reportar una barrera</a></li>
                     <li>
                         <form th:action="@{/logout}" method="post" style="display: inline;">
                             <button type="submit" class="boton-secundario" style="min-height: 38px; padding: 0.25rem 0.75rem; font-size: 1rem;">Cerrar Sesión</button>
@@ -113,7 +123,10 @@
         </form>
 
         <div style="margin-top: 2rem;">
-            <a th:href="@{/cursos}" class="boton-secundario">Ir al catálogo de cursos</a>
+            <a sec:authorize="hasRole('APRENDIZ')" th:href="@{/cursos}" class="boton-secundario">Ir al catálogo de cursos</a>
+            <a sec:authorize="hasRole('GESTOR_CONTENIDO')" th:href="@{/gestor/cursos}" class="boton-secundario">Volver a Mis Cursos y Contenidos</a>
+            <a sec:authorize="hasRole('REVISOR_ACCESIBILIDAD')" th:href="@{/revisor/cola}" class="boton-secundario">Volver a la Cola de Revisión</a>
+            <a sec:authorize="hasRole('COORDINADOR')" th:href="@{/reportes-barrera}" class="boton-secundario">Volver a Reportes de barreras</a>
         </div>
     </main>
 

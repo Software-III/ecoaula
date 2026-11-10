@@ -84,7 +84,8 @@
                     <input type="checkbox" id="consentimientoDatos" th:field="*{consentimientoDatos}" required
                            th:attr="aria-invalid=${#fields.hasErrors('consentimientoDatos')}, aria-describedby=${#fields.hasErrors('consentimientoDatos')} ? 'err-consent' : null">
                     <label for="consentimientoDatos">
-                        <strong>Autorización de tratamiento de datos personales:</strong> Autorizo de manera previa, expresa e informada el tratamiento de mis datos personales y sensibles con fines estrictamente académicos (Ley 1581 de 2012 y Decreto 1377 de 2013).
+                        <strong>Autorización de tratamiento de datos personales:</strong> Autorizo de manera previa, expresa e informada el tratamiento de mis datos personales y sensibles con fines estrictamente académicos (Ley 1581 de 2012 y Decreto 1377 de 2013), conforme a la
+                        <a th:href="@{/politica-datos}" target="_blank" rel="noopener">Política de Tratamiento de Datos Personales (se abre en una pestaña nueva)</a>.
                     </label>
                 </div>
                 <span id="err-consent" class="error-campo" th:if="${#fields.hasErrors('consentimientoDatos')}" th:errors="*{consentimientoDatos}"></span>

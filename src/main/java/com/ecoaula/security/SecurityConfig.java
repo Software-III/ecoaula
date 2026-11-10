@@ -42,12 +42,12 @@ public class SecurityConfig {
                     "/login",
                     "/api/v1/certificados/**",
                     "/verificar",
+                    "/politica-datos",
                     "/css/**",
                     "/js/**",
                     "/reportar-barrera",
                     "/reportar-barrera/**",
-                    "/error",
-                    "/h2-console/**"
+                    "/error"
                 ).permitAll()
                 .requestMatchers("/gestor/**").hasRole("GESTOR_CONTENIDO")
                 .requestMatchers("/revisor/**").hasRole("REVISOR_ACCESIBILIDAD")
